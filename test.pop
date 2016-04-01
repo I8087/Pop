@@ -1,0 +1,12 @@
+externc func int putchar(int c)
+externc func int abs(int n)
+
+import stdlib.pop
+
+## Note: Line numbers may be slightly screwy again...
+
+func int main():
+    int a = 0
+    while a != 10:
+       println(a)
+       a += 1

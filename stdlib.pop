@@ -1,0 +1,22 @@
+# stdio lib to include
+# println
+# print
+# printc ??? I should have labeled these...
+# file io as a class? Seems reasonable...
+
+externc func empty puts(string s)
+externc func empty printf(string s, int d)
+
+# Not much of a stdlib, huh?
+
+func empty println(int n):
+    printf("%d\n", n)
+
+func empty println(bool b):
+    if b:
+        puts("True")
+    else:
+        puts("False")
+
+func empty println(string s):
+    puts(s)
