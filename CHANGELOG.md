@@ -22,5 +22,5 @@
 ### Added
 - Initial release committed.
 
-[Unreleased]: https://github.com/I8087/Pop/Compare/v0.1.1...master
+[Unreleased]: https://github.com/I8087/Pop/compare/v0.1.1...master
 [0.1.1]: https://github.com/I8087/Pop/compare/v0.1...v0.1.1
