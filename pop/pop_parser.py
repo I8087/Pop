@@ -532,6 +532,7 @@ class Parser():
         func = pram1[0][1]
         dec = 0
         temp = ""
+        temp_list = []
 
         del pram1[0]
 
@@ -547,11 +548,24 @@ class Parser():
                 exit()
             elif (pram1[0][0] == "DATATYPE" and pram1[1][0] == "NAMESPACE"):
 
+                temp_list.append([False, pram1[0][1], pram1[1][1], "+%d" % dec])
+
                 # This is important for stack allocation purposes.
-                if pram1[0][1] == "LONG":
-                    dec += 8
-                else:
+                if pram1[0][1] == "BYTE":
+                    temp += "_B"
+                elif pram1[0][1] == "SHORT":
+                    temp += "_S"
+                elif pram1[0][1] == "INT":
+                    temp += "_I"
+                elif pram1[0][1] == "LONG":
+                    temp += "_L"
                     dec += 4
+                elif pram1[0][1] == "STRING":
+                    temp += "_A"
+                elif pram1[0][1] == "BOOL":
+                    temp += "_G"
+
+                dec += 4
 
                 # Get rid of the namespace and data type tokens.
                 del pram1[0]
@@ -574,10 +588,12 @@ class Parser():
         if not temp:
             temp = "_E"
 
-        self.extern.append("extern _%s%s@%d" % (func, temp, dec))
+        self.externs.append("_%s%s@%d" % (func, temp, dec))
+
+        func += temp
 
         if func not in self.defined:
-            self.defined[func] = [] # NOTE! Get parameters. Why?
+            self.defined[func] = temp_list
         else:
             self.parser_error("Cannot redeclare a function!.")
             exit(0)

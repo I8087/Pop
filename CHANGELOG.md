@@ -1,3 +1,10 @@
+## [Unreleased]
+### Changed
+- The compiler can now compile multiple files at once.
+
+### Fixed
+- The extern command now works.
+
 ## [0.1.1] - 2016-4-11
 ### Added
 - Added a change log.
@@ -15,4 +22,5 @@
 ### Added
 - Initial release committed.
 
+[Unreleased]: https://github.com/I8087/Pop/Compare/v0.1.1...master
 [0.1.1]: https://github.com/I8087/Pop/compare/v0.1...v0.1.1
