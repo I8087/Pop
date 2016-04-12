@@ -11,7 +11,7 @@
 - Removed stub.c since the project now uses py2exe instead of cython.
 - Removed the unneeded Cython build script.
 
-## [0.1.0] - 2016-3-31
+## 0.1.0 - 2016-3-31
 ### Added
 - Initial release committed.
 
