@@ -1,6 +1,7 @@
 ## [Unreleased]
 ### Changed
 - The compiler can now compile multiple files at once.
+- Test files will be housed in ./test
 
 ### Fixed
 - The extern command now works.
