@@ -9,7 +9,7 @@ if len(sys.argv) == 1:
 setup(
     name = "pop",
     description = "The pop compiler.",
-    version = "0.1",
+    version = "0.1.1",
     zipfile = None,
     options = {
         "py2exe": {
