@@ -1,7 +1,7 @@
 ## [Unreleased]
 ### Added
 - Added a change log.
-- Added py2exe build batch script.
+- Added py2exe batch build script, which was replaced with a python build script.
 
 ### Changed
 - Moved main.py into pop/__main__.py
