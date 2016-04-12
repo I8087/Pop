@@ -1,4 +1,4 @@
-## [Unreleased]
+## [0.1.1] - 2016-4-11
 ### Added
 - Added a change log.
 - Added py2exe build script. It was written in batch, but is now in Python.
