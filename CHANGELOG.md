@@ -5,6 +5,7 @@
 
 ### Changed
 - Moved main.py into pop/__main__.py
+- Updated the release .zip file, it's now just one executable and much more user friendly!
 
 ### Removed
 - Removed stub.c since the project now uses py2exe instead of cython.
@@ -13,3 +14,5 @@
 ## [0.1.0] - 2016-3-31
 ### Added
 - Initial release committed.
+
+[0.1.1]: https://github.com/I8087/Pop/compare/v0.1...v0.1.1
