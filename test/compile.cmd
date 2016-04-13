@@ -1,4 +1,5 @@
 @echo off
 title compile.cmd
-pop.exe test.pop
+cd ..
+py -3.4 -m pop -d test test.pop
 pause

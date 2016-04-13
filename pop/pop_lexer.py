@@ -447,10 +447,10 @@ class Lexer():
                         data[i] = data[i].rstrip()
                     discard, pram3, pram4 = self.count_lines(data, line, pram3, pram4)
                 except:
-                    self.lexer_error("Failed to import '%s'!" % line, count)
+                    self.lexer_error("Failed to import '%s'!" % line, pram3)
                     exit(0)
             elif " import " in line:
-                self.lexer_error("Import error!", count)
+                self.lexer_error("Import error!", pram3)
                 exit(0)
 
         return pram2, pram3, pram4

@@ -2,9 +2,12 @@
 ### Changed
 - The compiler can now compile multiple files at once.
 - Test files will be housed in ./test
+- Small changes to the test build scripts. Mainly replacing batch scripts with Python scripts.
 
 ### Fixed
 - The extern command now works.
+- Fixed a bug in an import error message that caused the compiler to crash.
+- Fixed several small path bugs.
 
 ## [0.1.1] - 2016-4-11
 ### Added
