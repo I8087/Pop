@@ -1,0 +1,4 @@
+import stdlib.pop
+
+func int main():
+    println("Hello, world!")

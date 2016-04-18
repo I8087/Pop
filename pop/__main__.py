@@ -40,7 +40,10 @@ os.chdir(pop_dir)
 if not args.o:
     args.o = args.input[0].split(".")[0]
 
-# List of object files to compile together.
+# List of all the assembly files generated.
+asmlist = []
+
+# List of all the object files generated.
 objlist = ["\"{0}\\prt.obj\"".format(build_dir)]  # By default prt.obj is included.
 
 for popfile in args.input:
@@ -71,6 +74,7 @@ for popfile in args.input:
         # Assemble the newly produced code.
         os.system("nasm -f win32 -o \"{0}\\{1}.obj\" \"{0}\\{1}.asm\"".format(build_dir, popfile[:-4]))
         objlist.append("\"{0}\\{1}.obj\"".format(build_dir, popfile[:-4]))
+        asmlist.append("\"{0}\\{1}.asm\"".format(build_dir, popfile[:-4]))
 
 # Change the working directory.
 os.chdir(pop_dir)
@@ -78,11 +82,20 @@ os.chdir(pop_dir)
 # Assemble the pop runtime.
 os.system("nasm -f win32 -o \"{0}\prt.obj\" asm\\prt.asm".format(build_dir, pop_dir))
 
+if "\\" in args.o and not os.path.exists("{0}\{1}".format(build_dir, args.o[:args.o.rfind("\\")])):
+    os.mkdir("{0}\{1}".format(build_dir, args.o[:args.o.rfind("\\")]))
+elif not os.path.exists(build_dir):
+    os.mkdir(build_dir)
+
 # Link the object files together.
-os.system("Golink /console /entry __start /fo \"{1}\\test.exe\" {0} kernel32.dll user32.dll msvcrt.dll".format(" ".join(objlist), build_dir))
+os.system("Golink /console /entry __start /fo \"{0}\\{1}\" {2} kernel32.dll user32.dll msvcrt.dll".format(build_dir, args.o, " ".join(objlist)))
 
 # Change the working directory.
 os.chdir(build_dir)
+
+# Clean up any leftover assembly files.
+for i in asmlist:
+    os.remove(i[1:-1])
 
 # Clean up any leftover object files.
 for i in objlist:

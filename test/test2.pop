@@ -1,0 +1,8 @@
+import stdlib.pop
+
+# This function demonstrates the while loop.
+func int main():
+    int a = 0
+    while a != 10:
+       println(a)
+       a += 1
