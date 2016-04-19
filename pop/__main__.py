@@ -8,6 +8,7 @@ import pop
 from pop.pop_lexer import *
 from pop.pop_parser import *
 from pop.pop_rpn import *
+from pop.pop_config import *
 
 print("Pop Compiler Version {0} | {1}".format(pop.__version__,
                                               pop.__copyright__)
@@ -25,7 +26,8 @@ args = aparser.parse_args()
 
 # Don't compile if nothing's there!
 if not args.input:
-    exit()
+    print("No input file(s) given!")
+    exit(-1)
 
 # Setup the build directory if there's one!
 if args.d:
@@ -39,6 +41,9 @@ os.chdir(pop_dir)
 # We need an output file name!
 if not args.o:
     args.o = args.input[0].split(".")[0]
+
+# Get the build options.
+options = Config().config()
 
 # List of all the assembly files generated.
 asmlist = []
@@ -62,13 +67,13 @@ for popfile in args.input:
 
     # If everything went good, start the compiling proccess.
     a, b, c = Lexer().lexer(data, popfile)
-    l = Parser().parser(a, b, c)
+    l = Parser().parser(a, b, options, c)
 
     # Change the working directory.
     os.chdir(pop_dir)
 
     if l:
-        with open("{0}\{1}.asm".format(build_dir, popfile[:-4]), "w") as file:
+        with open("{0}\\{1}.asm".format(build_dir, popfile[:-4]), "w") as file:
             file.write("\n".join(l))
 
         # Assemble the newly produced code.
@@ -80,10 +85,10 @@ for popfile in args.input:
 os.chdir(pop_dir)
 
 # Assemble the pop runtime.
-os.system("nasm -f win32 -o \"{0}\prt.obj\" asm\\prt.asm".format(build_dir, pop_dir))
+os.system("nasm -f win32 -o \"{0}\\prt.obj\" asm\\prt.asm".format(build_dir, pop_dir))
 
-if "\\" in args.o and not os.path.exists("{0}\{1}".format(build_dir, args.o[:args.o.rfind("\\")])):
-    os.mkdir("{0}\{1}".format(build_dir, args.o[:args.o.rfind("\\")]))
+if "\\" in args.o and not os.path.exists("{0}\\{1}".format(build_dir, args.o[:args.o.rfind("\\")])):
+    os.mkdir("{0}\\{1}".format(build_dir, args.o[:args.o.rfind("\\")]))
 elif not os.path.exists(build_dir):
     os.mkdir(build_dir)
 

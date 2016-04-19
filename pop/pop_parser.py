@@ -28,7 +28,7 @@ class Parser():
                         "___strindex"]
 
         self.indent_level = -1
-        self.indent = []  # Holds a dictionary of indents form source code.
+        self.indent = []  # Holds a dictionary of indentation levels.
         self.line = -1
 
         # Setup function values.
@@ -46,6 +46,8 @@ class Parser():
                         "OS_MAJOR": 0,  # What kind of crappy Window's is that?
                         "OS_MINOR": 0,
                         "BIT": 32}
+
+        self.options = {}
 
         # A list of strings.
         self.strings = []
@@ -71,12 +73,13 @@ class Parser():
         self.location = 0
         self.defined = {"__global__": []}  # Becoming obsolete...
 
-    def parser(self, pram1, pram2, pram3, pram4 = {"__global__": []}):
+    def parser(self, pram1, pram2, pram3, pram4, pram5 = {"__global__": []}):
         """This function parser's a list created by the lexer.
            pram1 = This is the list created by the lexer.
            pram2 = This is a list of all of the functions found by the lexer.
            pram3 = File to line dictionary.
-           pram4 = Optional. A dictionary of functions and variable.
+           pram4 = Build options in a dictionary.
+           pram5 = Optional. A dictionary of functions and variable.
         """
 
         # If pram1 isn't a list, then throw an error.
@@ -100,9 +103,17 @@ class Parser():
         # Turn this into a global variable.
         self.filelines = pram3
 
-        # If pram3 isn't a dictionary, then throw an error.
+        # If pram4 isn't a dictionary, then throw an error.
         if not(isinstance(pram4, dict)):
             self.internal_error("pram4 isn't a dict!", "parser")
+            return []
+
+        # Save the build options.
+        self.options = pram4
+
+        # If pram5 isn't a dictionary, then throw an error.
+        if not(isinstance(pram5, dict)):
+            self.internal_error("pram5 isn't a dict!", "parser")
             return []
 
         # This will be the main loop of the parser.
