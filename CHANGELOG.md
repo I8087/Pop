@@ -1,4 +1,7 @@
 ## [Unreleased]
+### Added
+- The compiler will now keep assembly files if specified.
+
 ### Changed
 - The compiler can now compile multiple files at once.
 - Test files will be housed in ./test
@@ -8,6 +11,7 @@
 - The extern command now works.
 - Fixed a bug in an import error message that caused the compiler to crash.
 - Fixed several small path bugs.
+- Fixed a bug that prevented the pretty printing of assembly files. 
 
 ## [0.1.1] - 2016-4-11
 ### Added
