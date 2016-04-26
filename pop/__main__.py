@@ -18,6 +18,8 @@ print("Pop Compiler Version {0} | {1}".format(pop.__version__,
 aparser = argparse.ArgumentParser()
 aparser.add_argument("input", help="the file(s) to be compiled",
                      nargs="+")
+aparser.add_argument("-a", help="do not discard the assembly file",
+                     action="store_true")
 aparser.add_argument("-d", help="the build directory")
 aparser.add_argument("-o", help="the output file")
 aparser.add_argument("-v", help="increase output verbosity",
@@ -99,8 +101,9 @@ os.system("Golink /console /entry __start /fo \"{0}\\{1}\" {2} kernel32.dll user
 os.chdir(build_dir)
 
 # Clean up any leftover assembly files.
-for i in asmlist:
-    os.remove(i[1:-1])
+if not args.a:
+    for i in asmlist:
+        os.remove(i[1:-1])
 
 # Clean up any leftover object files.
 for i in objlist:
