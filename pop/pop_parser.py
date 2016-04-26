@@ -295,7 +295,7 @@ class Parser():
 
         for i in range(len(self.out)):
             if not self.out[i].endswith(":"):
-                self.out[i] = "{:<4}".format(self.out[i])
+                self.out[i] = "{:<4}{}".format("", self.out[i]).rstrip()
 
         # Return the list of assembly.
         return self.out
