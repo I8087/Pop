@@ -190,6 +190,14 @@ class Lexer():
                     elif function:
                         function_decs += "_A"
 
+                elif line.startswith("struct "):
+                    pram2.append(["DATATYPE", "STRUCT"])
+                    line = line[6:].strip()
+                    if function and not function_datatype:
+                        function_datatype = "STRUCT"
+                    elif function:
+                        function_decs += "_F"
+
                 elif line.startswith("unsigned "):
                     pram2.append(["DATATYPE", "UNSIGNED"])
                     line = line[8:].strip()

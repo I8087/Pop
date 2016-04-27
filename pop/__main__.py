@@ -69,7 +69,7 @@ for popfile in args.input:
 
     # If everything went good, start the compiling proccess.
     a, b, c = Lexer().lexer(data, popfile)
-    l = Parser().parser(a, b, options, c)
+    l = Parser().parser(a, b, c, options)
 
     # Change the working directory.
     os.chdir(pop_dir)

@@ -1,6 +1,7 @@
 ## [Unreleased]
 ### Added
 - The compiler will now keep assembly files if specified.
+- Structures are now partially supported.
 
 ### Changed
 - The compiler can now compile multiple files at once.
@@ -9,9 +10,9 @@
 
 ### Fixed
 - The extern command now works.
-- Fixed a bug in an import error message that caused the compiler to crash.
+- Fixed a bug where any error message would crash the compiler.
 - Fixed several small path bugs.
-- Fixed a bug that prevented the pretty printing of assembly files. 
+- Fixed a bug that prevented the pretty printing of assembly files.
 
 ## [0.1.1] - 2016-4-11
 ### Added
@@ -19,7 +20,7 @@
 - Added py2exe build script. It was written in batch, but is now in Python.
 
 ### Changed
-- Moved main.py into pop/__main__.py
+- Moved main.py into pop/\_\_main\_\_.py
 - Updated the release .zip file, it's now just one executable and much more user friendly!
 
 ### Removed

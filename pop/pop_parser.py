@@ -31,6 +31,10 @@ class Parser():
         self.indent = []  # Holds a dictionary of indentation levels.
         self.line = -1
 
+        # STRUCT info
+        self.structs = {}  # This holds a list of all the global structures.
+        self.current_structs = []  # This holds a list of current structure indentations.
+
         # Setup function values.
         self.function = False
         self.function_signed = False
@@ -157,6 +161,10 @@ class Parser():
                 del pram1[0]
                 self.do_else(pram1)
 
+            elif pram1[0][0] == "DATATYPE" and pram1[0][1] == "STRUCT":
+                del pram1[0]
+                self.do_struct(pram1)
+
             elif (pram1[0][0] == "DATATYPE"):
                 # It can be assumed that this datatype isn't signed.
                 self.signed = False
@@ -186,6 +194,10 @@ class Parser():
                          self.datatype,
                          self.namespace,
                          self.location])
+                elif not self.function and self.current_structs:
+                    self.structs[self.current_structs[-1]].append({"signed": self.signed,
+                                                                   "datatype": self.datatype,
+                                                                   "namespace": self.namespace})
                 else:
                     self.defined["__global__"].append([self.signed, self.datatype, self.namespace])
 
@@ -228,13 +240,14 @@ class Parser():
                         self.datatype = i[1]
                         self.math(pram1)
 
-                for i in self.defined[self.function_namespace]:
-                    if i[2] == pram1[0][1] and not(found):
-                        found = True
-                        self.namespace = pram1[0][1]
-                        self.signed = i[0]
-                        self.datatype = i[1]
-                        self.math(pram1)
+                if self.function_namespace:
+                    for i in self.defined[self.function_namespace]:
+                        if i[2] == pram1[0][1] and not(found):
+                            found = True
+                            self.namespace = pram1[0][1]
+                            self.signed = i[0]
+                            self.datatype = i[1]
+                            self.math(pram1)
 
                 if not found:
                     self.parser_error("Variable `%s` is undefined!" % pram1[0][1], self.line)
@@ -255,10 +268,26 @@ class Parser():
                 self.parser_error("Unknown garbage at the end of the line!", self.line)
                 exit()
 
+        # Insert the text section declaration.
+        self.out.insert(0, "")
         self.out.insert(0, "SECTION .text\n")
+        self.out.insert(0, "")
 
-        if len(self.globals) > 1:
-            self.out.insert(0, "")
+        # Define our structures for NASM!
+        if self.structs:
+            for i in self.structs.keys():
+                self.out.insert(0, "")
+                self.out.insert(0, "endstruc")
+                self.structs[i] = self.structs[i][::-1]  # Reverse the variables.
+
+                # Write the variables to the output.
+                for x in self.structs[i]:
+                    self.out.insert(0, "{:>4}.{}: {} 0".format(" ",
+                                                              x["namespace"],
+                                                              self.res_shrink(x["datatype"])))
+
+                # Don't forget the structures name!
+                self.out.insert(0, "struc {}".format(i))
 
         if self.globals:
             self.out.insert(0, "")
@@ -277,6 +306,7 @@ class Parser():
         self.out.insert(3, "")
         self.out.insert(4, "%define True 1")  # Really? I know BOOL is a subtype of INT but still...
         self.out.insert(5, "%define False 0")
+        self.out.insert(6, "")
 
         # Don't add a pointless section if it's not needed. Plus,
         # having a data section with no data would break the OS.
@@ -295,7 +325,7 @@ class Parser():
 
         for i in range(len(self.out)):
             if not self.out[i].endswith(":"):
-                self.out[i] = "{:<4}{}".format("", self.out[i]).rstrip()
+                self.out[i] = "{:>4}{}".format("", self.out[i]).rstrip()
 
         # Return the list of assembly.
         return self.out
@@ -446,6 +476,27 @@ class Parser():
             self.out.append("je %s" % lbl)
         elif cmp == "jz":
             self.out.append("jz %s" % lbl)
+
+    def do_struct(self, pram1):
+        """This function builds structures.
+           pram1 = A list of tokens.
+        """
+
+        if pram1[0][0] == "NAMESPACE":
+            self.structs[pram1[0][1]] = []
+            self.current_structs.append(pram1[0][1])
+            del pram1[0]
+        else:
+            self.parser_error("Expected a structure namespace!", self.line)
+            exit(-1)
+
+        if pram1[0][1] == ":":
+            del pram1[0]
+        else:
+            self.parser_error("Expected an ending ':'!", self.line)
+            exit(-1)
+
+        self.indent.append(["STRUCT_NEXT", self.indent_level])
 
     def do_externc(self, pram1):
         """This function compiles and analyzes the external functions much
@@ -740,6 +791,10 @@ class Parser():
             del self.indent[-1]
             self.indent.append(("FUNCTION", self.indent_level))
 
+        elif self.indent[-1][0] == "STRUCT_NEXT" and (self.indent_level > self.indent[-1][1]):
+            del self.indent[-1]
+            self.indent.append(("STRUCT", self.indent_level))
+
         elif self.indent[-1][0] == "WHILE_NEXT" and (self.indent_level > self.indent[-1][1]):
             del self.indent[-1]
             self.indent.append(("WHILE", self.indent_level))
@@ -765,6 +820,7 @@ class Parser():
                 if self.location != 0:
                     self.out.insert(self.function_line,
                                     "sub esp, %d" % (abs(self.location)))
+                    self.out.insert(self.function_line+1,"")
 
                 # Append this leaving code for the function.
                 self.do_return(pram1)
@@ -783,6 +839,16 @@ class Parser():
                 self.location = 0
                 self.function_line = -1
 
+        elif self.indent[-1][0] == "STRUCT":
+            if self.indent[-1][1] < self.indent_level:
+                self.parser_error("Indentation error!", self.line)
+                exit(1)
+            else:
+                del self.indent[-1] # Delete it now.
+
+            # Clean up.
+            del self.current_structs[-1]
+
         elif self.indent[-1][0] == "WHILE":
             if self.indent[-1][1] < self.indent_level:
                 self.parser_error("Indentation error!", self.line)
@@ -791,7 +857,8 @@ class Parser():
                 del self.indent[-1] # Delete it now.
 
                 # Important if cleanup code here.
-                self.out.append("jmp %s" %self.cons[-2])
+                self.out.append("jmp %s" % self.cons[-2])
+                self.out.append("")
                 self.out.append("%s:" % self.cons[-1])
 
                 del self.cons[-1]
@@ -805,6 +872,7 @@ class Parser():
                 del self.indent[-1] # Delete it now.
 
                 # Important if cleanup code here.
+                self.out.append("")
                 self.out.append("%s:" % self.cons[-1])
 
                 del self.cons[-1]
@@ -819,6 +887,7 @@ class Parser():
                 del self.indent[-1] # Delete it now.
 
                 # Important else cleanup code here.
+                self.out.append("")
                 self.out.append("%s:" % self.cons[-1])
 
                 del self.cons[-1]
@@ -846,6 +915,9 @@ class Parser():
                 del pram1[0]
             return
 
+        # Add this for file neatness.
+        self.out.append("")
+
         if len(pram1) and pram1[0][0] != "INDENT":
             if self.function:
                 self.datatype = self.function_datatype
@@ -864,6 +936,10 @@ class Parser():
         self.out.append("ret")
 
     def do_exit(self, pram1):
+
+        # Add this for file neatness.
+        self.out.append("")
+
         if len(pram1) and pram1[0][0] != "INDENT":
             self.datatype = "INT"
             self.math(pram1)
@@ -1002,6 +1078,21 @@ class Parser():
             return "dd"
         elif pram1 == "LONG":
             return "dq"
+        else:
+            self.internal_error("An unknown data type was passed.", self.line)
+
+    def res_shrink(self, pram1):
+        """ Turns a datatype like 'BYTE' into asm uninitialized datatypes, like 'resb'.
+            pram1 = Datatype to shrink.
+        """
+        if pram1 == "BYTE" or pram1 == "BOOL" or pram1 == "STRING":
+            return "resb"
+        elif pram1 == "SHORT":
+            return "resw"
+        elif pram1 == "INT":
+            return "resd"
+        elif pram1 == "LONG":
+            return "resq"
         else:
             self.internal_error("An unknown data type was passed.", self.line)
 
@@ -1353,7 +1444,8 @@ class Parser():
                     func = mlist[0][5:]
                     del mlist[0]
                     if mlist[0] != "(":
-                        print("Expected a starting paratheses!")
+                        self.parser_error("Expected a starting paratheses!",
+                                          self.line)
                         exit(-1)
                     del mlist[0]
 
@@ -1565,6 +1657,8 @@ class Parser():
             print(stack)
             self.internal_error("A math stack problem has occurred!", "math")
             exit(-1)
+
+        self.out.append("")
 
 if __name__ == "__main__":
     print("This isn't a standalone library!")

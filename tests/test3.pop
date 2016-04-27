@@ -1,0 +1,18 @@
+import stdlib.pop
+
+struct somestruct:
+    int a
+    short b
+    byte c
+
+struct somesctruct2:
+    int a
+    int c
+    byte b
+    short e
+
+func int main():
+    #somestruct mystruct
+    #mystruct.a = 10
+    int d = 11 #mystruct.a + 1 # d is now 11
+    exit d
