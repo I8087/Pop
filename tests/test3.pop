@@ -12,7 +12,7 @@ struct somesctruct2:
     short e
 
 func int main():
-    #somestruct mystruct
-    #mystruct.a = 10
-    int d = 11 #mystruct.a + 1 # d is now 11
+    somestruct mystruct
+    mystruct.a = 10
+    int d = 1 + mystruct.a
     exit d

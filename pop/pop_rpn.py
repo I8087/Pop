@@ -18,6 +18,7 @@ class RPN():
                     "[":   [1, False],
                     "]":   [1, False],
                     ",":   [1, False],
+                    #"." :  [1, False],
                     "@":   [2, True],
                     "*":   [3, False],
                     "/":   [3, False],
@@ -43,7 +44,7 @@ class RPN():
                     ">>=": [15, True],
                     "&=":  [15, True],
                     "^=":  [15, True],
-                    "|=":  [15, True],}
+                    "|=":  [15, True]}
 
         # Flag if a variable was right before another token.
         var = False
@@ -104,7 +105,7 @@ class RPN():
             # If this is an operator, than some complex stuff needs to be done...
             elif i in self.ops and i not in ("(", ")", "[", "]", ","):
                 # TBD Add right associative support.
-                if opstack and opstack[-1] not in ("(", ")", "[", "]") and ((not self.ops[i][1] and self.ops[i][0] <= self.ops[opstack[-1]][0]) or \
+                if opstack and opstack[-1] not in ("(", ")", "[", "]") and ((not self.ops[i][1] and self.ops[i][0] >= self.ops[opstack[-1]][0]) or \
                                      (self.ops[i][1] and self.ops[i][0] > self.ops[opstack[-1]][0])):
                     outstack.append(opstack[-1])
                     opstack[-1] = i

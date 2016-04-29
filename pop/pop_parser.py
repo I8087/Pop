@@ -11,7 +11,6 @@ class Parser():
         # NOTE: I'm sure this class constructor has been over-abused.
         #       Clean it up!
 
-
         # Holds the text section.
         self.out = ["; This code was compiled via the pop compiler.",
                     "; It is machine generated, so it may look messy.",
@@ -176,7 +175,9 @@ class Parser():
                 del pram1[0]
                 self.do_struct(pram1)
 
-            elif (pram1[0][0] == "DATATYPE"):
+            elif (pram1[0][0] == "DATATYPE" or
+                  pram1[0][1] in self.structs):
+
                 # It can be assumed that this datatype isn't signed.
                 self.signed = False
 
@@ -185,6 +186,24 @@ class Parser():
 
                 if self.function and self.datatype == "LONG":
                     self.location -= 8
+                elif self.function and self.datatype in self.structs:
+                    l = 0
+                    for i in self.structs[self.datatype]:
+                        if i["datatype"] == "LONG":
+                            l += 8
+                        elif i["datatype"] == "INT":
+                            l += 4
+                        elif i["datatype"] == "SHORT":
+                            l += 4  # 2
+                        elif i["datatype"] == "BYTE":
+                            l += 4  # 1
+                        else:
+                            self.parser_error("Unknown datatype in the structure `{}`!".format(self.datatype),
+                                              self.line)
+
+                    # Make sure everything is aligned by a dword.
+                    self.location -= l + (4-l%4)
+
                 elif self.function:
                     self.location -= 4
 
@@ -1150,7 +1169,9 @@ class Parser():
             return "al"
         elif pram1 == "SHORT":
             return "ax"
-        elif pram1 == "INT" or (pram1 == "STRING" and self.options["BIT"] == 32):
+        elif (pram1 == "INT" or
+              (pram1 == "STRING" and self.options["BIT"] == 32) or
+               pram1 in self.structs):
             return "eax"
         elif pram1 == "LONG":
             return "rax"
@@ -1169,8 +1190,8 @@ class Parser():
         elif pram1 == "SHORT":
             return "bx"
         elif (pram1 == "INT" or
-              (pram1 == "STRING" and
-               self.options["BIT"] == 32)):
+              (pram1 == "STRING" and self.options["BIT"] == 32) or
+               pram1 in self.structs):
             return "ebx"
         elif pram1 == "LONG":
             return "rbx"
@@ -1188,7 +1209,9 @@ class Parser():
             return "cl"
         elif pram1 == "SHORT":
             return "cx"
-        elif pram1 == "INT" or (pram1 == "STRING" and self.options["BIT"] == 32):
+        elif (pram1 == "INT" or
+              (pram1 == "STRING" and self.options["BIT"] == 32) or
+               pram1 in self.structs):
             return "ecx"
         elif pram1 == "LONG":
             return "rcx"
@@ -1206,7 +1229,9 @@ class Parser():
             return "dl"
         elif pram1 == "SHORT":
             return "dx"
-        elif pram1 == "INT" or (pram1 == "STRING" and self.options["BIT"] == 32):
+        elif (pram1 == "INT" or
+              (pram1 == "STRING" and self.options["BIT"] == 32) or
+               pram1 in self.structs):
             return "edx"
         elif pram1 == "LONG":
             return "rdx"
@@ -1224,7 +1249,9 @@ class Parser():
             return "byte"
         elif pram1 == "SHORT":
             return "word"
-        elif pram1 == "INT" or (pram1 == "STRING" and self.options["BIT"] == 32):
+        elif (pram1 == "INT" or
+              (pram1 == "STRING" and self.options["BIT"] == 32) or
+               pram1 in self.structs):
             return "dword"
         elif pram1 == "LONG":
             return "qword"
@@ -1305,6 +1332,28 @@ class Parser():
                 return "[ebp%s]" % i[3]
         self.internal_error("Unknown variable namespace!", "locate")
         exit(0)
+
+    def vlocate(self, pram1):
+        """ Finds the variable of a stack-based location.
+            pram1 = The location.
+        """
+
+        if self.function:
+            for i in self.defined[self.function_namespace]:
+                if pram1 == i[3]:
+                    return i[2]
+        return ""
+
+    def vtype(self, pram1):
+        """ Finds datatype of a variable.
+            pram1 = The location.
+        """
+
+        if self.function:
+            for i in self.defined[self.function_namespace]:
+                if pram1 == i[2]:
+                    return i[1]
+        return ""
 
     def var_exists(self, pram1):
         """ Tests to see if the given variable name exists.
@@ -1436,7 +1485,19 @@ class Parser():
             self.out.append("; RPN: `%s`" % " ".join(mlist))
 
             for i in range(len(mlist)):
-                if not mlist[i].isdigit() and mlist[i] not in RPN.ops and self.var_exists(mlist[i]):
+                if not mlist[i]:
+                    pass
+                elif mlist[i] == ".":
+                    # Sloppy, but usable structure support.
+
+                    loc = int(mlist[i-1][4:-1])
+                    mlist[i] = "[ebp{!s}+{}.{}]".format(loc,
+                                                          self.vtype(self.vlocate(loc)),
+                                                          mlist[i+1])
+                    mlist[i-1] = None
+                    mlist[i+1] = None
+
+                elif not mlist[i].isdigit() and mlist[i] not in RPN.ops and self.var_exists(mlist[i]):
                     mlist[i] = self.locate(mlist[i])
                 elif mlist[i].find("\"") != -1:
                     mlist[i] = self.create_string(mlist[i])
@@ -1444,6 +1505,9 @@ class Parser():
                     break
                 elif not mlist[i].isdigit() and mlist[i] not in RPN.ops and not self.var_exists(mlist[i]):
                     mlist[i] = "func %s" % mlist[i]
+
+            # Remove all None types now that we're out of a loop.
+            mlist = [i for i in mlist if i != None]
 
             self.out.append("; Expanded RPN: `%s`" % " ".join(mlist))
 
