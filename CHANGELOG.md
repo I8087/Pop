@@ -7,6 +7,7 @@
 - The compiler can now compile multiple files at once.
 - Test files will be housed in ./test
 - Small changes to the test build scripts. Mainly replacing batch scripts with Python scripts.
+- The compiler will now generate cleaner assembly files.
 
 ### Fixed
 - The extern command now works.
