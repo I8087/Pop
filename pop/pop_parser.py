@@ -330,12 +330,12 @@ class Parser():
             if not self.out[i].endswith(":"):
                 self.out[i] = "{:>4}{}".format("", self.out[i]).rstrip()
 
-                # Excessive spacing is flagged.
+                # Excessive line breaks are flagged.
                 if i > 0 and self.out[i] == "" and (self.out[i-1] == "" or
                                                     self.out[i-1].endswith(":")):
                     self.out[i] = None
 
-        # Excessive spacing is now removed. :D
+        # Excessive line breaks are now removed. :D
         self.out = [i for i in self.out if i != None]
 
         # Return the list of assembly.
@@ -786,8 +786,8 @@ class Parser():
         self.out.append(temp)
         self.out.append("push ebp")
         self.out.append("mov ebp, esp")
-        self.out.append("")
         self.function_line = len(self.out)
+        self.out.append("")
 
     def do_indent(self, pram1):
         """This function implements the compilers indentation.
