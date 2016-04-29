@@ -11,7 +11,18 @@ class Parser():
         # NOTE: I'm sure this class constructor has been over-abused.
         #       Clean it up!
 
-        self.out = []  # Holds the text section
+
+        # Holds the text section.
+        self.out = ["; This code was compiled via the pop compiler.",
+                    "; It is machine generated, so it may look messy.",
+                    "; Edit this source code at your own risk!",
+                    "",
+                    "%define True 1",  # Really? I know BOOL is a subtype of INT but still...
+                    "%define False 0",
+                    ""]
+
+        self.out_offset = len(self.out)
+
         self.data = []  # Holds the data section.
         self.rodata = []  # Holds the rodata section. TBD.
 
@@ -269,49 +280,41 @@ class Parser():
                 exit()
 
         # Insert the text section declaration.
-        self.out.insert(0, "")
-        self.out.insert(0, "SECTION .text\n")
-        self.out.insert(0, "")
+        self.out.insert(self.out_offset, "")
+        self.out.insert(self.out_offset, "SECTION .text\n")
+        self.out.insert(self.out_offset, "")
 
         # Define our structures for NASM!
         if self.structs:
             for i in self.structs.keys():
-                self.out.insert(0, "")
-                self.out.insert(0, "endstruc")
+                self.out.insert(self.out_offset, "")
+                self.out.insert(self.out_offset, "endstruc")
                 self.structs[i] = self.structs[i][::-1]  # Reverse the variables.
 
                 # Write the variables to the output.
                 for x in self.structs[i]:
-                    self.out.insert(0, "{:>4}.{}: {} 0".format(" ",
-                                                              x["namespace"],
-                                                              self.res_shrink(x["datatype"])))
+                    self.out.insert(self.out_offset,
+                                    "{:>4}.{}: {} 0".format(" ",
+                                                            x["namespace"],
+                                                            self.res_shrink(x["datatype"])))
 
                 # Don't forget the structures name!
-                self.out.insert(0, "struc {}".format(i))
+                self.out.insert(self.out_offset, "struc {}".format(i))
 
         if self.globals:
-            self.out.insert(0, "")
+            self.out.insert(self.out_offset, "")
             for i in self.globals:
-                self.out.insert(0, "global %s" % i)
+                self.out.insert(self.out_offset, "global %s" % i)
 
         if self.externs:
-            self.out.insert(0, "")
+            self.out.insert(self.out_offset, "")
             for i in self.externs:
-                self.out.insert(0, "extern %s" % i)
-
-        # Put a notic into the source code.
-        self.out.insert(0, "; This code was compiled via the pop compiler.")
-        self.out.insert(1, "; It is machine generated, so it may look messy.")
-        self.out.insert(2, "; Edit this source code at your own risk!")
-        self.out.insert(3, "")
-        self.out.insert(4, "%define True 1")  # Really? I know BOOL is a subtype of INT but still...
-        self.out.insert(5, "%define False 0")
-        self.out.insert(6, "")
+                self.out.insert(self.out_offset, "extern %s" % i)
 
         # Don't add a pointless section if it's not needed. Plus,
         # having a data section with no data would break the OS.
         if self.data:
-            self.data.insert(0, "\nSECTION .data")
+            self.data.insert(self.out_offset, "\nSECTION .data")
             self.out += self.data
 
         if self.strings:
@@ -326,6 +329,14 @@ class Parser():
         for i in range(len(self.out)):
             if not self.out[i].endswith(":"):
                 self.out[i] = "{:>4}{}".format("", self.out[i]).rstrip()
+
+                # Excessive spacing is flagged.
+                if i > 0 and self.out[i] == "" and (self.out[i-1] == "" or
+                                                    self.out[i-1].endswith(":")):
+                    self.out[i] = None
+
+        # Excessive spacing is now removed. :D
+        self.out = [i for i in self.out if i != None]
 
         # Return the list of assembly.
         return self.out
@@ -394,6 +405,9 @@ class Parser():
         elif cmp == "jz":
             self.out.append("jz %s" % lbl)
 
+        # Keep the code neat and tidy!
+        self.out.append("")
+
     def do_else(self, pram1):
         """This function computes the if statement.
            pram1 = A list of tokens.
@@ -415,6 +429,7 @@ class Parser():
         self.cons.append(lbl)
 
         self.out.insert(-1, "jmp %s" % lbl)
+        self.out.insert(-1, "")
 
     def do_if(self, pram1):
         """This function computes the if statement.
@@ -476,6 +491,9 @@ class Parser():
             self.out.append("je %s" % lbl)
         elif cmp == "jz":
             self.out.append("jz %s" % lbl)
+
+        # Keep the code neat and tidy!
+        self.out.append("")
 
     def do_struct(self, pram1):
         """This function builds structures.
@@ -768,6 +786,7 @@ class Parser():
         self.out.append(temp)
         self.out.append("push ebp")
         self.out.append("mov ebp, esp")
+        self.out.append("")
         self.function_line = len(self.out)
 
     def do_indent(self, pram1):
@@ -934,6 +953,7 @@ class Parser():
         self.out.append("mov esp, ebp")
         self.out.append("pop ebp")
         self.out.append("ret")
+        self.out.append("")
 
     def do_exit(self, pram1):
 
