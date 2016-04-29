@@ -37,7 +37,16 @@ if args.d:
 
 # Save the builds path and set the compiler path!
 build_dir = os.getcwd()
-pop_dir = "\\".join(sys.argv[0].split("\\")[:-2])
+
+# Special pathing must be used if this is pure python script!
+if sys.argv[0].endswith(".py"):
+    pop_dir = "\\".join(sys.argv[0].split("\\")[:-2])
+elif sys.argv[0].endswith(".exe"):
+    pop_dir = "\\".join(sys.executable.split("\\")[:-1])
+else:
+    print("Unknown file extension!!!")
+    exit(-1)
+
 os.chdir(pop_dir)
 
 # We need an output file name!

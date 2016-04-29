@@ -14,6 +14,7 @@
 - Fixed a bug where any error message would crash the compiler.
 - Fixed several small path bugs.
 - Fixed a bug that prevented the pretty printing of assembly files.
+- Fixed a pathing problem for the win32 build.
 
 ## [0.1.1] - 2016-4-11
 ### Added
