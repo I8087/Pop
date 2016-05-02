@@ -8,6 +8,9 @@ Prebuilt binaries for win32 can be found [here](https://github.com/I8087/Pop/rel
 # Help
 Helpful information can be found in the [wiki](https://github.com/I8087/Pop/wiki).
 
+# Draft
+An incomplete draft of the language can be found [here](https://en.wikiversity.org/wiki/User:I8086/Draft).
+
 # Dependencies
 * [NASM] (http://nasm.us/)
 * [GoLink] (http://www.godevtool.com/GolinkHelp/GoLink.htm)
