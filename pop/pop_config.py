@@ -8,8 +8,9 @@ class Config():
 
         # Setup the platform default options.
         options = {"platform": sys.platform,
-                   "machine": platform.machine,
-                   "system": platform.system
+                   "machine": platform.machine(),
+                   "system": platform.system(),
+                   "BIT": 32  # Legacy code!!!
                    }
 
         # Allow the platform to be overridable.

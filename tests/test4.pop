@@ -1,0 +1,13 @@
+import stdlib.pop
+
+func int main():
+    int a = 0
+    int b = 10
+    println("@a is...")
+    println(@a)
+    println("@b is...")
+    println(@b)
+    println("@c is...")
+    println(@"Hello, world!")
+    println("bytes between @a and @b...")
+    println(@a+@b)

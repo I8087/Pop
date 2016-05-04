@@ -1484,27 +1484,48 @@ class Parser():
             mlist = RPN(mstr)
             self.out.append("; RPN: `%s`" % " ".join(mlist))
 
+            temp_mlist = []
+
             for i in range(len(mlist)):
                 if not mlist[i]:
                     pass
                 elif mlist[i] == ".":
                     # Sloppy, but usable structure support.
-
                     loc = int(mlist[i-1][4:-1])
-                    mlist[i] = "[ebp{!s}+{}.{}]".format(loc,
-                                                          self.vtype(self.vlocate(loc)),
-                                                          mlist[i+1])
-                    mlist[i-1] = None
+                    temp_mlist.append("[ebp{!s}+{}.{}]".format(loc,
+                                                               self.vtype(self.vlocate(loc)),
+                                                               mlist[i+1]))
+
+                    del temp_mlist[-1]
                     mlist[i+1] = None
 
+                elif mlist[i] == "@":
+                    # Make sure @ is used correctly!
+                    if not (mlist[i-1].startswith("[ebp") and mlist[i-1].endswith("]")):
+                        self.parser_error("Incorrect use of the @ operator!", self.line)
+                        exit(-1)
+
+                    # Get the address of the variable, even if it's stack-based!
+                    mlist[i-1] = mlist[i-1].lstrip("[").rstrip("]")
+                    del temp_mlist[-1]
+                    temp_mlist.append("ebp")
+                    temp_mlist.append(mlist[i-1][4:])
+                    temp_mlist.append(mlist[i-1][3:4])
+                                      
+
                 elif not mlist[i].isdigit() and mlist[i] not in RPN.ops and self.var_exists(mlist[i]):
-                    mlist[i] = self.locate(mlist[i])
+                    temp_mlist.append(self.locate(mlist[i]))
+                    mlist[i] = temp_mlist[-1]
                 elif mlist[i].find("\"") != -1:
-                    mlist[i] = self.create_string(mlist[i])
-                elif mlist[i] in ("True", "False"):
-                    break
+                    temp_mlist.append(self.create_string(mlist[i]))
+                    mlist[i] = temp_mlist[-1]
                 elif not mlist[i].isdigit() and mlist[i] not in RPN.ops and not self.var_exists(mlist[i]):
-                    mlist[i] = "func %s" % mlist[i]
+                    temp_mlist.append("func {}".format(mlist[i]))
+                    mlist[i] = temp_mlist[-1]
+                else:
+                    temp_mlist.append(mlist[i])
+
+            mlist = temp_mlist
 
             # Remove all None types now that we're out of a loop.
             mlist = [i for i in mlist if i != None]
@@ -1555,6 +1576,13 @@ class Parser():
                         if len(templist) > 1:
                             # Actually do something...
                             self.math(templist, True)
+                            self.out.append("push eax")
+                        elif templist[0].startswith("ebp"):
+                            self.out.append("mov eax, ebp")
+                            if "+" in templist[0]:
+                                self.out.append("add eax, {}".format(templist[0][4:]))
+                            else:
+                                self.out.append("sub eax, {}".format(templist[0][4:]))
                             self.out.append("push eax")
                         else:
                             self.out.append("push dword %s" % templist[0])

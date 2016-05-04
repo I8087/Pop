@@ -2,6 +2,7 @@
 ### Added
 - The compiler will now keep assembly files if specified.
 - Structures are now partially supported.
+- Addressing is now partially supported.
 
 ### Changed
 - The compiler can now compile multiple files at once.
