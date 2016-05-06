@@ -1165,18 +1165,19 @@ class Parser():
         """ Turns a datatype like 'BYTE' into an aligned register, like 'al'.
             pram1 = Datatype to shrink.
         """
-        if pram1 == "BYTE" or pram1 == "BOOL":
+        if pram1 == "BYTE" or pram1 == "BOOL" or (pram1.startswith("PTR") and self.options["BIT"] == 8):
             return "al"
-        elif pram1 == "SHORT":
+        elif pram1 == "SHORT" or (pram1.startswith("PTR") and self.options["BIT"] == 16):
             return "ax"
         elif (pram1 == "INT" or
               (pram1 == "STRING" and self.options["BIT"] == 32) or
-               pram1 in self.structs):
+              pram1 in self.structs or
+              (pram1.startswith("PTR") and self.options["BIT"] == 32)):
             return "eax"
-        elif pram1 == "LONG":
+        elif pram1 == "LONG" and (pram1.startswith("PTR") and self.options["BIT"] == 64):
             return "rax"
         elif pram1 == "EMPTY":
-            return "?empty?"
+            return
         else:
             self.internal_error("An unknown datatype was passed.", "reg")
             exit()
@@ -1185,61 +1186,46 @@ class Parser():
         """ Turns a datatype like 'BYTE' into an aligned register, like 'bl'.
             pram1 = Datatype to shrink.
         """
-        if pram1 == "BYTE" or pram1 == "BOOL":
-            return "bl"
-        elif pram1 == "SHORT":
-            return "bx"
-        elif (pram1 == "INT" or
-              (pram1 == "STRING" and self.options["BIT"] == 32) or
-               pram1 in self.structs):
-            return "ebx"
-        elif pram1 == "LONG":
-            return "rbx"
-        elif pram1 == "EMPTY":
-            return "?empty?"
-        else:
-            self.internal_error("An unknown datatype was passed.", "reg_b")
-            exit()
+
+        # Get the ?a? version of the register.
+        r = self.reg(pram1)
+
+        # If a ?a? register is returned, convert it to ?b?.
+        if r:
+            r = r.replace("a", "b")
+
+        # Return the ?b? register.
+        return r
 
     def reg_c(self, pram1):
         """ Turns a datatype like 'BYTE' into an aligned register, like 'cl'.
             pram1 = Datatype to shrink.
         """
-        if pram1 == "BYTE" or pram1 == "BOOL":
-            return "cl"
-        elif pram1 == "SHORT":
-            return "cx"
-        elif (pram1 == "INT" or
-              (pram1 == "STRING" and self.options["BIT"] == 32) or
-               pram1 in self.structs):
-            return "ecx"
-        elif pram1 == "LONG":
-            return "rcx"
-        elif pram1 == "EMPTY":
-            return "?empty?"
-        else:
-            self.internal_error("An unknown datatype was passed.", "reg_c")
-            exit()
+
+        # Get the ?a? version of the register.
+        r = self.reg(pram1)
+
+        # If a ?a? register is returned, convert it to ?c?.
+        if r:
+            r = r.replace("a", "c")
+
+        # Return the ?c? register.
+        return r
 
     def reg_d(self, pram1):
         """ Turns a datatype like 'BYTE' into an aligned register, like 'al'.
             pram1 = Datatype to shrink.
         """
-        if pram1 == "BYTE" or pram1 == "BOOL":
-            return "dl"
-        elif pram1 == "SHORT":
-            return "dx"
-        elif (pram1 == "INT" or
-              (pram1 == "STRING" and self.options["BIT"] == 32) or
-               pram1 in self.structs):
-            return "edx"
-        elif pram1 == "LONG":
-            return "rdx"
-        elif pram1 == "EMPTY":
-            return "?empty?"
-        else:
-            self.internal_error("An unknown datatype was passed.", "reg")
-            exit()
+
+        # Get the ?a? version of the register.
+        r = self.reg(pram1)
+
+        # If a ?a? register is returned, convert it to ?d?.
+        if r:
+            r = r.replace("a", "d")
+
+        # Return the ?d? register.
+        return r
 
     def size(self, pram1):
         """ Turns a datatype like 'INT' into an aligned register, like 'dword'.
@@ -1276,7 +1262,6 @@ class Parser():
             if i[2] == pram1:
                 return i[1]
 
-
         if pram1.startswith("string"):
             return "STRING"
 
@@ -1288,7 +1273,10 @@ class Parser():
 
         # WRONG!!!
         if pram1.startswith("ebp"):
-            return "INT"
+            if pram1.strip() == "ebp":
+                return self.vtype(self.vlocate(0))
+            else:
+                return self.vtype(self.vlocate(int(pram1[3:])))
 
         self.parser_error("The variable '%s' is undefined!" % pram1, self.line)
         exit(-1)
@@ -1461,6 +1449,12 @@ class Parser():
         regc = self.reg_c(self.datatype)
         regd = self.reg_d(self.datatype)
 
+        # Datatypes for current registers, including those on the stack.
+        typea = []
+        typeb = []
+        typec = []
+        typed = []
+
         # See if the variable is global or not.
         if self.function:
             glob = True
@@ -1577,7 +1571,7 @@ class Parser():
                             # Actually do something...
                             self.math(templist, True)
                             self.out.append("push eax")
-                        elif templist[0].startswith("ebp"):
+                        elif templist[0].startswith("ebp"):  # Old code; Needed?
                             self.out.append("mov eax, ebp")
                             if "+" in templist[0]:
                                 self.out.append("add eax, {}".format(templist[0][4:]))
@@ -1594,6 +1588,7 @@ class Parser():
                     stack.append(mlist[0])
                     del mlist[0]
             elif len(mlist) > 1 and mlist[0] == "[":
+
                 del mlist[0]
                 index_list = []
                 while mlist and mlist[0] != "]":
@@ -1603,12 +1598,33 @@ class Parser():
                 del mlist[0]
                 self.math(index_list, True)
 
-                # Actually do something. Is this string-biased?
-                self.out.append("push %s" % reg)
-                self.out.append("push dword %s" % stack[-1])
-                self.out.append("call ___strindex")
-                self.out.append("add esp, 8")
+                if self.dtype(stack[-1]) == "STRING":
+                    self.out.append("push %s" % reg)
+                    self.out.append("push dword %s" % stack[-1])
+                    self.out.append("call ___strindex")
+                    self.out.append("add esp, 8")
+                elif self.dtype(stack[-1]).startswith("PTR"): # POINTERS DON'T WORK!!!!
 
+                    # Factor in pointer offsets.
+                    if self.dtype(stack[-1]).endswith("16"):
+                        self.out.append("mov {}, 2".format(regd))
+                    if self.dtype(stack[-1]).endswith("32"):
+                        self.out.append("mov {}, 4".format(regd))
+                    if self.dtype(stack[-1]).endswith("64"):
+                        self.out.append("mov {}, 8".format(regd))
+                    if not self.dtype(stack[-1]).endswith("8"):
+                        self.out.append("mul {}".format(regd))
+
+                    self.out.append("add {}, {}".format(reg, stack[-1]))
+                    self.out.append("mov {}, {}".format(regb, reg))
+                    self.out.append("xor {0}, {0}".format(reg))
+                    self.out.append("mov al, [{}]".format(regb))
+                else:
+                    self.parser_error("Indexing error!", self.line)
+
+                typea.append(self.dtype(stack[-1]))
+
+                # Remove the closing bracket.
                 del stack[-1]
 
             else:
@@ -1644,6 +1660,8 @@ class Parser():
                         self.parser_error("Math syntax error!", self.line)
                         exit(-1)
 
+                    # PLACE HOLDER!!!
+                    typea.append(self.dtype(stack[i]))
                     self.out.append("mov %s, %s" % (reg, stack[i]))
                     del stack[i]
                     mov_set = True

@@ -182,6 +182,38 @@ class Lexer():
                     elif function:
                         function_decs += "_L"
 
+                elif line.startswith("ptr8 "):
+                    pram2.append(["DATATYPE", "PTR8"])
+                    line = line[4:].strip()
+                    if function and not function_datatype:
+                        function_datatype = "PTR8"
+                    elif function:
+                        function_decs += "_PB"
+
+                elif line.startswith("ptr16 "):
+                    pram2.append(["DATATYPE", "PTR16"])
+                    line = line[4:].strip()
+                    if function and not function_datatype:
+                        function_datatype = "PTR16"
+                    elif function:
+                        function_decs += "_PS"
+
+                elif line.startswith("ptr32 "):
+                    pram2.append(["DATATYPE", "PTR32"])
+                    line = line[4:].strip()
+                    if function and not function_datatype:
+                        function_datatype = "PTR32"
+                    elif function:
+                        function_decs += "_PI"
+
+                elif line.startswith("ptr64 "):
+                    pram2.append(["DATATYPE", "PTR64"])
+                    line = line[4:].strip()
+                    if function and not function_datatype:
+                        function_datatype = "PTR64"
+                    elif function:
+                        function_decs += "_PL"
+
                 elif line.startswith("string "):
                     pram2.append(["DATATYPE", "STRING"])
                     line = line[6:].strip()

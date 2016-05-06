@@ -1,0 +1,12 @@
+import stdlib.pop
+
+#externc func empty putchar(byte c)
+
+func int main():
+    int i = 0
+    string s = "Hello, world!\n"
+    ptr8 ps = s
+
+    while ps[i] != 0:
+        putchar(ps[i])
+        i += 1

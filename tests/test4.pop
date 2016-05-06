@@ -7,7 +7,5 @@ func int main():
     println(@a)
     println("@b is...")
     println(@b)
-    println("@c is...")
-    println(@"Hello, world!")
     println("bytes between @a and @b...")
     println(@a+@b)
