@@ -1,5 +1,6 @@
 # Notice the word 'we' in my comments... obvious signs of insanity...
 
+import pop
 from pop.pop_rpn import *
 
 
@@ -15,6 +16,8 @@ class Parser():
         self.out = ["; This code was compiled via the pop compiler.",
                     "; It is machine generated, so it may look messy.",
                     "; Edit this source code at your own risk!",
+                    "",
+                    "; Compiled using version {} of the Pop Compiler!".format(pop.__version__),
                     "",
                     "%define True 1",  # Really? I know BOOL is a subtype of INT but still...
                     "%define False 0",

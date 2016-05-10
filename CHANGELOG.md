@@ -4,6 +4,7 @@
 - Structures are now supported.
 - Addressing is now supported.
 - Classes are now supported.
+- The compiler now leaves the compiler's version in the assembly output for debugging purposes.
 
 ### Changed
 - The compiler can now compile multiple files at once.
