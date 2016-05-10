@@ -1,8 +1,9 @@
 ## [Unreleased]
 ### Added
 - The compiler will now keep assembly files if specified.
-- Structures are now partially supported.
-- Addressing is now partially supported.
+- Structures are now supported.
+- Addressing is now supported.
+- Classes are now supported.
 
 ### Changed
 - The compiler can now compile multiple files at once.
@@ -16,6 +17,7 @@
 - Fixed several small path bugs.
 - Fixed a bug that prevented the pretty printing of assembly files.
 - Fixed a pathing problem for the win32 build.
+- Fixed a bug that didn't let you call a function with no parameters.
 
 ## [0.1.1] - 2016-4-11
 ### Added

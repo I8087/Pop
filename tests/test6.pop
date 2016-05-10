@@ -1,0 +1,21 @@
+import stdlib.pop
+
+class dog:
+
+    func empty bark():
+        println("Bark!")
+
+    func empty woof():
+        println("Woof!")
+
+    func empty humanAge(int a):
+        println(a*7)
+
+func int main():
+    # Initialize an instance of the class.
+    dog b
+
+    # Run the class's methods.
+    b.bark()
+    b.woof()
+    b.humanAge(3)

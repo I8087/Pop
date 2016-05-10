@@ -4,13 +4,33 @@
 # printc ??? I should have labeled these...
 # file io as a class? Seems reasonable...
 
+externc func empty putchar(byte c)
 externc func empty puts(string s)
 externc func empty printf(string s, int d)
 
 # Not much of a stdlib, huh?
 
 func empty println(int n):
-    printf("%d\n", n)
+    # Temp holder for the number.
+    int nn = 0
+
+    # Reverse the number.
+    while n != 0:
+        nn *= 10
+        nn += n % 10
+        n //= 10
+
+    # Special case if the number is zero.
+    if nn == 0:
+        putchar('0')
+
+    # Print the number.
+    while nn != 0:
+        putchar(nn % 10 + 48)
+        nn //= 10
+
+    # Added that linefeed!
+    putchar('\n')
 
 func empty println(bool b):
     if b:
@@ -20,3 +40,9 @@ func empty println(bool b):
 
 func empty println(string s):
     puts(s)
+
+#func empty print(string s):
+#    int i = 0
+#    while s[i] != 0:
+#        putchar(s[i])
+#        i += 1

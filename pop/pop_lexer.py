@@ -128,12 +128,17 @@ class Lexer():
                 if line.startswith("#"):
                     line = ""
 
-                # Datatypes start here.
                 elif line.startswith("func "):
                     pram2.append(["NAMESPACE", "FUNCTION"])
                     line = line[4:].strip()
                     function = True
 
+                elif line.startswith("class "):
+                    pram2.append(["NAMESPACE", "CLASS"])
+                    line = line[5:].strip()
+                    function = True
+
+                # Datatypes start here.
                 elif line.startswith("empty "):
                     pram2.append(["DATATYPE", "EMPTY"])
                     line = line[5:].strip()
