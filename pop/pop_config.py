@@ -1,4 +1,6 @@
-import os, sys, platform
+import os
+import sys
+import platform
 
 
 class Config():

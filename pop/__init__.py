@@ -9,4 +9,4 @@ from pop.pop_rpn import *
 from pop.pop_config import *
 
 __version__ = "0.2.0"
-__copyright__="Copyright (c) 2014-2016 Nathan Yodock"
+__copyright__ = "Copyright (c) 2014-2016 Nathan Yodock"

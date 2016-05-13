@@ -60,7 +60,8 @@ options = Config().config()
 asmlist = []
 
 # List of all the object files generated.
-objlist = ["\"{0}\\prt.obj\"".format(build_dir)]  # By default prt.obj is included.
+# By default prt.obj is included.
+objlist = ["\"{0}\\prt.obj\"".format(build_dir)]
 
 for popfile in args.input:
     # Only compile pop source files!
@@ -88,7 +89,10 @@ for popfile in args.input:
             file.write("\n".join(l))
 
         # Assemble the newly produced code.
-        os.system("nasm -f win32 -o \"{0}\\{1}.obj\" \"{0}\\{1}.asm\"".format(build_dir, popfile[:-4]))
+        os.system("nasm -f win32 -o \"{0}\\{1}.obj\" \"{0}\\{1}.asm\"".format(
+            build_dir,
+            popfile[:-4])
+                  )
         objlist.append("\"{0}\\{1}.obj\"".format(build_dir, popfile[:-4]))
         asmlist.append("\"{0}\\{1}.asm\"".format(build_dir, popfile[:-4]))
 
@@ -96,15 +100,21 @@ for popfile in args.input:
 os.chdir(pop_dir)
 
 # Assemble the pop runtime.
-os.system("nasm -f win32 -o \"{0}\\prt.obj\" asm\\prt.asm".format(build_dir, pop_dir))
+os.system("nasm -f win32 -o \"{0}\\prt.obj\" asm\\prt.asm".format(build_dir,
+                                                                  pop_dir))
 
-if "\\" in args.o and not os.path.exists("{0}\\{1}".format(build_dir, args.o[:args.o.rfind("\\")])):
+if "\\" in args.o and not os.path.exists("{0}\\{1}".format(
+        build_dir,
+        args.o[:args.o.rfind("\\")])):
     os.mkdir("{0}\\{1}".format(build_dir, args.o[:args.o.rfind("\\")]))
 elif not os.path.exists(build_dir):
     os.mkdir(build_dir)
 
 # Link the object files together.
-os.system("Golink /console /entry __start /fo \"{0}\\{1}\" {2} kernel32.dll user32.dll msvcrt.dll".format(build_dir, args.o, " ".join(objlist)))
+os.system("Golink /console /entry __start /fo \"{0}\\{1}\" "
+          "{2} kernel32.dll user32.dll msvcrt.dll".format(build_dir,
+                                                          args.o,
+                                                          " ".join(objlist)))
 
 # Change the working directory.
 os.chdir(build_dir)

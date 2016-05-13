@@ -11,14 +11,15 @@ class RPN():
 
         # Dictionary that defines each operators, which points to a list where:
         # The first is the precendece level where 1 is the highest.
-        # The second is a Boolean that's true if the operaator is right associative.
+        # The second is a Boolean that's true if the operaator
+        # is right associative.
+
         # TBD: Tuple the values.
         self.ops = {"(":   [1, False],
                     ")":   [1, False],
                     "[":   [1, False],
                     "]":   [1, False],
                     ",":   [1, False],
-                    #"." :  [1, False],
                     "@":   [2, True],
                     "*":   [3, False],
                     "/":   [3, False],
@@ -56,7 +57,7 @@ class RPN():
         while code:
 
             # If there is some spaces, remove them.
-            if code [0] == " ":
+            if code[0] == " ":
                 code = code.lstrip()
 
             # Like below, except it handles three character operators.
@@ -102,11 +103,18 @@ class RPN():
                 var = True
                 outstack.append(i)
 
-            # If this is an operator, than some complex stuff needs to be done...
-            elif i in self.ops and i not in ("(", ")", "[", "]", ","):
+            # If this is an operator,
+            # than some complex stuff needs to be done...
+            elif (i in self.ops and i not in ("(", ")", "[", "]", ",")):
+
                 # TBD Add right associative support.
-                if opstack and opstack[-1] not in ("(", ")", "[", "]") and ((not self.ops[i][1] and self.ops[i][0] >= self.ops[opstack[-1]][0]) or \
-                                     (self.ops[i][1] and self.ops[i][0] > self.ops[opstack[-1]][0])):
+                if (opstack and
+                    opstack[-1] not in ("(", ")", "[", "]") and
+                    ((not self.ops[i][1] and
+                      self.ops[i][0] >= self.ops[opstack[-1]][0]) or
+                     (self.ops[i][1] and
+                      self.ops[i][0] > self.ops[opstack[-1]][0]))):
+
                     outstack.append(opstack[-1])
                     opstack[-1] = i
                 else:
@@ -148,15 +156,19 @@ class RPN():
                         if count:
                             templist.append(instack[size])
                             del instack[size]
-                    templist = RPN(" ".join(templist), verbose=verbose, func=True)
+                    templist = RPN(" ".join(templist),
+                                   verbose=verbose,
+                                   func=True)
                     outstack.append("(")
                     outstack.extend(templist)
                     outstack.append(")")
 
                 var = False
 
-            # Pop everything off the opstack into the outstack until a "(" is found.
+            # Pop everything off the opstack into
+            # the outstack until a "(" is found.
             elif i == ")":
+
                 # Well... i is now inverted.
                 i = "("
 
@@ -173,7 +185,7 @@ class RPN():
 
         # Pop everything off the opstack into the outstack.
         for i in opstack[::-1]:
-            if i in ("(", "["): # Switch them around for the error message.
+            if i in ("(", "["):  # Switch them around for the error message.
                 print("Error! Expected an ending \"%s\"!" % i)
                 exit(-1)
             outstack.append(i)
@@ -196,6 +208,3 @@ class RPN():
                 del outstack[-1]
 
         return outstack
-
-    #def __str__(self, code="", verbose=False):
-    #    return " ".join(self.__new__(code, verbose))

@@ -78,7 +78,6 @@ class Lexer():
 
         pram1 = self.build_lines(pram1)
 
-
         # Reset the count from the previous loop.
         count = 0
 
@@ -490,7 +489,8 @@ class Lexer():
                         data = file.read().split("\n")
                     for i in range(len(data)):
                         data[i] = data[i].rstrip()
-                    discard, pram3, pram4 = self.count_lines(data, line, pram3, pram4)
+                    discard, pram3, pram4 = self.count_lines(
+                        data, line, pram3, pram4)
                 except:
                     self.lexer_error("Failed to import '%s'!" % line, pram3)
                     exit(0)

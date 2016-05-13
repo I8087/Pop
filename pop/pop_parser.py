@@ -17,9 +17,10 @@ class Parser():
                     "; It is machine generated, so it may look messy.",
                     "; Edit this source code at your own risk!",
                     "",
-                    "; Compiled using version {} of the Pop Compiler!".format(pop.__version__),
+                    "; Compiled using version {} of the Pop Compiler!".format(
+                        pop.__version__),
                     "",
-                    "%define True 1",  # Really? I know BOOL is a subtype of INT but still...
+                    "%define True 1",  # Define this in a header.
                     "%define False 0",
                     ""]
 
@@ -44,9 +45,11 @@ class Parser():
         self.indent = []  # Holds a dictionary of indentation levels.
         self.line = -1
 
-        # STRUCT info
-        self.structs = {}  # This holds a list of all the global structures.
-        self.current_structs = []  # This holds a list of current structure indentations.
+        # This holds a list of all the global structures.
+        self.structs = {}
+
+        # This holds a list of current structure indentations.
+        self.current_structs = []
 
         # Setup class values.
         self.cls = False  # NOTE: Cannot be self.class
@@ -98,7 +101,7 @@ class Parser():
 
         self.location = 0
 
-    def parser(self, pram1, pram2, pram3, pram4, pram5 = {"__global__": []}):
+    def parser(self, pram1, pram2, pram3, pram4, pram5={"__global__": []}):
         """This function parser's a list created by the lexer.
            pram1 = This is the list created by the lexer.
            pram2 = This is a list of all of the functions found by the lexer.
@@ -205,12 +208,15 @@ class Parser():
                     for i in self.classes[pram1[0][1]]:
                         self.location -= 4
                     for i in self.classes[pram1[0][1]]:
-                        self.out.append("mov dword [ebp{0}+_class_{3}._{1}@{2}], {3}._{1}@{2}".format(
-                            self.location,
-                            i,
-                            self.function_size(i, cls=pram1[0][1]),
-                            pram1[0][1]))
-                        
+                        self.out.append("mov dword [ebp{0}+_class_{3}._{1}@"
+                                        "{2} ], {3}._{1}@{2}".format(
+                                            self.location,
+                                            i,
+                                            self.function_size(
+                                                i,
+                                                cls=pram1[0][1]),
+                                            pram1[0][1]))
+
                 elif self.function and self.datatype in self.structs:
                     l = 0
                     for i in self.structs[self.datatype]:
@@ -223,11 +229,13 @@ class Parser():
                         elif i["datatype"] == "BYTE":
                             l += 4  # 1
                         else:
-                            self.parser_error("Unknown datatype in the structure `{}`!".format(self.datatype),
+                            self.parser_error("Unknown datatype in the "
+                                              "structure `{}`!".format(
+                                                  self.datatype),
                                               self.line)
 
                     # Make sure everything is aligned by a dword.
-                    self.location -= l + (4-l%4)
+                    self.location -= l + (4-l % 4)
 
                 elif self.function:
                     self.location -= 4
@@ -244,21 +252,25 @@ class Parser():
 
                 # NOTE: WORK HERE!
 
-                # Add this variable into the defined dictionary for later static reference.
+                # Add this variable into the defined dictionary
+                # for later static reference.
                 if self.function:
-                    self.classes[self.class_namespace][self.function_namespace][self.namespace] = {
+                    self.classes[self.class_namespace][
+                        self.function_namespace][self.namespace] = {
                         "signed": self.signed,
                         "datatype": self.datatype,
                         "location": "{!s}".format(self.location)}
 
                 elif not self.function and self.current_structs:
-                    self.structs[self.current_structs[-1]].append({"signed": self.signed,
-                                                                   "datatype": self.datatype,
-                                                                   "namespace": self.namespace})
+                    self.structs[self.current_structs[-1]].append({
+                        "signed": self.signed,
+                        "datatype": self.datatype,
+                        "namespace": self.namespace})
                 else:
-                    self.classes["__global__"][self.namespace] = {"signed": self.signed,
-                                                                  "datatype": self.datatype,
-                                                                  "location": ""}
+                    self.classes["__global__"][self.namespace] = {
+                        "signed": self.signed,
+                        "datatype": self.datatype,
+                        "location": ""}
 
                 # If there is an assignment, then math will be needed.
                 if (pram1[0][0] == "OPERATOR") and (pram1[0][1] == "="):
@@ -290,14 +302,22 @@ class Parser():
             # For already declared variables.
             elif pram1[0][0] == "NAMESPACE":
 
-                if self.classes[self.class_namespace][self.function_namespace][pram1[0][1]]:
+                if self.classes[self.class_namespace][self.function_namespace][
+                        pram1[0][1]]:
+
                     self.namespace = pram1[0][1]
-                    self.signed = self.classes[self.class_namespace][self.function_namespace][pram1[0][1]]["signed"]
-                    self.datatype = self.classes[self.class_namespace][self.function_namespace][pram1[0][1]]["datatype"]
+
+                    self.signed = self.classes[self.class_namespace][
+                        self.function_namespace][pram1[0][1]]["signed"]
+
+                    self.datatype = self.classes[self.class_namespace][
+                        self.function_namespace][pram1[0][1]]["datatype"]
+
                     self.math(pram1)
 
                 else:
-                    self.parser_error("Variable `%s` is undefined!" % pram1[0][1], self.line)
+                    self.parser_error("Variable `%s` is undefined!" %
+                                      pram1[0][1], self.line)
                     return []
 
             # This is needed after every line or there's an error!
@@ -309,7 +329,8 @@ class Parser():
                 del pram1[0]
                 self.do_indent(pram1)
             else:
-                self.parser_error("Unknown garbage at the end of the line!", self.line)
+                self.parser_error("Unknown garbage at the end of the line!",
+                                  self.line)
                 exit()
 
         # Insert the text section declaration.
@@ -322,14 +343,17 @@ class Parser():
             for i in self.structs.keys():
                 self.out.insert(self.out_offset, "")
                 self.out.insert(self.out_offset, "endstruc")
-                self.structs[i] = self.structs[i][::-1]  # Reverse the variables.
+
+                # Reverse the variables.
+                self.structs[i] = self.structs[i][::-1]
 
                 # Write the variables to the output.
                 for x in self.structs[i]:
                     self.out.insert(self.out_offset,
-                                    "{:>4}.{}: {} 0".format(" ",
-                                                            x["namespace"],
-                                                            self.res_shrink(x["datatype"])))
+                                    "{:>4}.{}: {} 0".format(
+                                        " ",
+                                        x["namespace"],
+                                        self.res_shrink(x["datatype"])))
 
                 # Don't forget the structures name!
                 self.out.insert(self.out_offset, "struc {}".format(i))
@@ -343,8 +367,9 @@ class Parser():
 
             for x in self.classes[i]:
                 self.out.insert(self.out_offset,
-                                "    ._{0}@{1}: resd 1".format(x,
-                                                               self.function_size(x, cls=i)))
+                                "    ._{0}@{1}: resd 1".format(
+                                    x,
+                                    self.function_size(x, cls=i)))
 
             # Don't forget the structures name!
             self.out.insert(self.out_offset, "struc _class_{}".format(i))
@@ -380,12 +405,14 @@ class Parser():
                 self.out[i] = "{:>4}{}".format("", self.out[i]).rstrip()
 
                 # Excessive line breaks are flagged.
-                if i > 0 and self.out[i] == "" and (self.out[i-1] == "" or
-                                                    self.out[i-1].endswith(":")):
+                if (i > 0 and
+                    self.out[i] == ""and
+                    (self.out[i-1] == "" or
+                     self.out[i-1].endswith(":"))):
                     self.out[i] = None
 
         # Excessive line breaks are now removed. :D
-        self.out = [i for i in self.out if i != None]
+        self.out = [i for i in self.out if i is not None]
 
         # Return the list of assembly.
         return self.out
@@ -413,7 +440,8 @@ class Parser():
                 temp_list.append(pram1[0])
                 del pram1[0]
             else:
-                if pram1[0][1] != ":": found = True
+                if pram1[0][1] != ":":
+                    found = True
                 if temp_list[0][0] == "NAMESPACE":
                     self.datatype = self.dtype(temp_list[0][1])
                 else:
@@ -463,7 +491,8 @@ class Parser():
         """
 
         if not self.if_done:
-            self.parser_error("Need an if statement before an else statement!", self.line)
+            self.parser_error("Need an if statement before an else statement!",
+                              self.line)
             exit(-1)
 
         if not pram1[0][1] == ":":
@@ -498,7 +527,8 @@ class Parser():
                 temp_list.append(pram1[0])
                 del pram1[0]
             else:
-                if pram1[0][1] != ":": found = True
+                if pram1[0][1] != ":":
+                    found = True
                 if temp_list[0][0] == "NAMESPACE":
                     self.datatype = self.dtype(temp_list[0][1])
                 else:
@@ -515,14 +545,12 @@ class Parser():
 
                 temp_list = []
 
-
                 if not cmp:
                     cmp = pram1[0][1]
 
                 del pram1[0]
 
         self.indent.append(["IF_NEXT", self.indent_level])
-
 
         if found:
             self.out.append("cmp eax, ebx")
@@ -616,7 +644,8 @@ class Parser():
                 del pram1[0]
 
             else:
-                self.parser_error("An error has occurred within a function's parmeters.", self.line)
+                self.parser_error("An error has occurred within a function's "
+                                  "parmeters.", self.line)
 
             # A comma is expected after ever prameter,
             # unless it is the end of prameters.
@@ -704,7 +733,8 @@ class Parser():
                 del pram1[0]
 
             else:
-                self.parser_error("An error has occurred within a function's parmeters.", self.line)
+                self.parser_error("An error has occurred within a function's "
+                                  "parmeters.", self.line)
 
             # A comma is expected after ever prameter,
             # unless it is the end of prameters.
@@ -730,8 +760,6 @@ class Parser():
             self.parser_error("Cannot redeclare a function!.")
             exit(0)
 
-
-
     def do_function(self, pram1):
         """This function implements the compilers function compiling.
            pram1 = A list of tokens.
@@ -752,7 +780,8 @@ class Parser():
             self.datatype = pram1[0][1]
             del pram1[0]
         else:
-            self.parser_error("Expected a data type for the function!", self.line)
+            self.parser_error("Expected a data type for the function!",
+                              self.line)
 
         if (pram1[0][0] == "NAMESPACE"):
             self.function_namespace = pram1[0][1]
@@ -767,14 +796,18 @@ class Parser():
             exit(0)
         else:
             del pram1[0]
-            location = 8 # This is a local variable that isn't the same as self.location!
+
+            # This is a local variable that isn't the same as self.location!
+            location = 8
 
             temp_list = {}
             while (pram1[0][0] != "OPERATOR") and (pram1[0][1] != ")"):
                 if (pram1[0][0] == "INDENT"):
-                    self.parser_error("Expected a closing parenthese!", self.line)
+                    self.parser_error("Expected a closing parenthese!",
+                                      self.line)
                     exit()
-                elif (pram1[0][0] == "DATATYPE" and pram1[1][0] == "NAMESPACE"):
+                elif (pram1[0][0] == "DATATYPE" and
+                      pram1[1][0] == "NAMESPACE"):
 
                     # No need to check for duplicates; the lexer handles that.
                     temp_list[pram1[1][1]] = {"signed": False,
@@ -787,15 +820,16 @@ class Parser():
                     else:
                         location += 4
 
-
                     function_prams.append(pram1[0][1])
                     # Get rid of the namespace and data type tokens.
                     del pram1[0]
                     del pram1[0]
                 else:
-                    self.parser_error("An error has occurred within a function's parameters.", self.line)
+                    self.parser_error("An error has occurred within a "
+                                      "function's parameters.", self.line)
 
-                # A comma is expected after ever prameter, unless it is the end of prameters.
+                # A comma is expected after ever prameter,
+                # unless it is the end of prameters.
                 if pram1[0][0] == "OPERATOR" and pram1[0][1] == ",":
                     del pram1[0]
                 elif pram1[0][0] == "OPERATOR" and pram1[0][1] != ")":
@@ -806,7 +840,8 @@ class Parser():
             del pram1[0]
 
             if (pram1[0][0] != "OPERATOR") or (pram1[0][1] != ":"):
-                self.parser_error("Expected a colon at the end of the function", self.line)
+                self.parser_error("Expected a colon at the end of the "
+                                  "function", self.line)
                 exit()
 
             del pram1[0]
@@ -875,7 +910,8 @@ class Parser():
         self.indent.append(["CLASS_NEXT", self.indent_level])
 
         if (pram1[0][0] != "OPERATOR") or (pram1[0][1] != ":"):
-            self.parser_error("Expected a colon at the end of the class!", self.line)
+            self.parser_error("Expected a colon at the end of the class!",
+                              self.line)
             exit()
 
         # Delete the colon.
@@ -898,30 +934,37 @@ class Parser():
             self.parser_error("Indentation error!", self.line)
             return []
 
-        elif (len(self.indent) != 0) and (self.indent_level == self.indent[-1][1]):
+        elif (len(self.indent) != 0 and
+              self.indent_level == self.indent[-1][1]):
             return
 
-        elif self.indent[-1][0] == "CLASS_NEXT" and (self.indent_level > self.indent[-1][1]):
+        elif (self.indent[-1][0] == "CLASS_NEXT" and
+              self.indent_level > self.indent[-1][1]):
             del self.indent[-1]
             self.indent.append(("CLASS", self.indent_level))
 
-        elif self.indent[-1][0] == "FUNCTION_NEXT" and (self.indent_level > self.indent[-1][1]):
+        elif (self.indent[-1][0] == "FUNCTION_NEXT" and
+              self.indent_level > self.indent[-1][1]):
             del self.indent[-1]
             self.indent.append(("FUNCTION", self.indent_level))
 
-        elif self.indent[-1][0] == "STRUCT_NEXT" and (self.indent_level > self.indent[-1][1]):
+        elif (self.indent[-1][0] == "STRUCT_NEXT" and
+              self.indent_level > self.indent[-1][1]):
             del self.indent[-1]
             self.indent.append(("STRUCT", self.indent_level))
 
-        elif self.indent[-1][0] == "WHILE_NEXT" and (self.indent_level > self.indent[-1][1]):
+        elif (self.indent[-1][0] == "WHILE_NEXT" and
+              self.indent_level > self.indent[-1][1]):
             del self.indent[-1]
             self.indent.append(("WHILE", self.indent_level))
 
-        elif self.indent[-1][0] == "IF_NEXT" and (self.indent_level > self.indent[-1][1]):
+        elif (self.indent[-1][0] == "IF_NEXT" and
+              self.indent_level > self.indent[-1][1]):
             del self.indent[-1]
             self.indent.append(("IF", self.indent_level))
 
-        elif self.indent[-1][0] == "ELSE_NEXT" and (self.indent_level > self.indent[-1][1]):
+        elif (self.indent[-1][0] == "ELSE_NEXT" and
+              self.indent_level > self.indent[-1][1]):
             del self.indent[-1]
             self.indent.append(("ELSE", self.indent_level))
 
@@ -931,14 +974,14 @@ class Parser():
                 self.parser_error("Indentation error!", self.line)
                 exit(1)
             else:
-                del self.indent[-1] # Delete it now.
+                del self.indent[-1]  # Delete it now.
 
                 pram1.insert(0, ["INDENT", -1])
 
                 if self.location != 0:
                     self.out.insert(self.function_line,
                                     "sub esp, %d" % (abs(self.location)))
-                    self.out.insert(self.function_line+1,"")
+                    self.out.insert(self.function_line+1, "")
 
                 # Append this leaving code for the function.
                 self.do_return(pram1)
@@ -962,7 +1005,7 @@ class Parser():
                 self.parser_error("Indentation error!", self.line)
                 exit(1)
 
-            del self.indent[-1] # Delete it now.
+            del self.indent[-1]  # Delete it now.
 
             # Reset the class parameters.
             self.cls = False
@@ -973,7 +1016,7 @@ class Parser():
                 self.parser_error("Indentation error!", self.line)
                 exit(1)
 
-            del self.indent[-1] # Delete it now.
+            del self.indent[-1]  # Delete it now.
 
             # Clean up.
             del self.current_structs[-1]
@@ -983,7 +1026,7 @@ class Parser():
                 self.parser_error("Indentation error!", self.line)
                 exit(1)
             else:
-                del self.indent[-1] # Delete it now.
+                del self.indent[-1]  # Delete it now.
 
                 # Important if cleanup code here.
                 self.out.append("jmp %s" % self.cons[-2])
@@ -998,7 +1041,7 @@ class Parser():
                 self.parser_error("Indentation error!", self.line)
                 exit(1)
             else:
-                del self.indent[-1] # Delete it now.
+                del self.indent[-1]  # Delete it now.
 
                 # Important if cleanup code here.
                 self.out.append("")
@@ -1013,7 +1056,7 @@ class Parser():
                 self.parser_error("Indentation error!", self.line)
                 exit(1)
             else:
-                del self.indent[-1] # Delete it now.
+                del self.indent[-1]  # Delete it now.
 
                 # Important else cleanup code here.
                 self.out.append("")
@@ -1053,7 +1096,8 @@ class Parser():
             else:
                 self.datatype = "INT"
             if self.datatype == "EMPTY":
-                self.parser_error("An `empty` cannot return anything!", self.line)
+                self.parser_error("An `empty` cannot return anything!",
+                                  self.line)
                 exit(1)
             self.math(pram1)
         else:
@@ -1089,9 +1133,9 @@ class Parser():
 
         print("Internal Parser Error in '%s': %s" % (pram2, pram1))
 
-
     def parser_error(self, pram1, pram2):
-        """This function displays an error message caused by the programmer's code, not the compiler.
+        """This function displays an error message caused by the programmer's
+           code, not the compiler.
            pram1 = The error string.
            pram2 = The line number.
         """
@@ -1106,7 +1150,6 @@ class Parser():
 
         # Prints a formatted error string.
         print("Parser Error in '%s' @ %d: %s" % (file, line, pram1))
-
 
     def get_function_name(self, pram1, pram2, cls="__global__"):
         """This function returns a decorated function name.
@@ -1157,11 +1200,13 @@ class Parser():
 
         # Test to see if this function exists...
         for func in funcs:
-            if (func.startswith(pram1) and func.endswith("@{!s}".format(dec))) or func.startswith(pram1):
+            if (func.startswith(pram1) and
+               func.endswith("@{!s}".format(dec))) or func.startswith(pram1):
                 temp_list.append(func[:])
 
         if not temp_list:
-            self.parser_error("This function's parameters are wrong!", self.line)
+            self.parser_error("This function's parameters are wrong!",
+                              self.line)
             exit(-1)
 
         temp2 = ""
@@ -1171,7 +1216,8 @@ class Parser():
             for i in range(len(temp)//2):
                 x = temp[i*2+1]
                 y = ""
-                for t in temp_list:  # This area might cause problems; keep an eye on it.
+                # (Probably) broken code. Keep an eye on it.
+                for t in temp_list:
                     t = t[t.find("_")+1:]
                     if t[0] == "G" and not y:
                         y = "G"
@@ -1181,7 +1227,9 @@ class Parser():
                         y = "B"
                     elif t[0] == "S" and (x == "S" and not y and y != "B"):
                         y = "S"
-                    elif t[0] == "I" and (x == "I" and not y and y not in ("B", "S")):
+                    elif t[0] == "I" and (x == "I" and not y and y not in ("B",
+                                                                           "S")
+                                          ):
                         y = "I"
                     # Longs aren't supported yet.
                 if not y:
@@ -1222,7 +1270,8 @@ class Parser():
             self.internal_error("An unknown data type was passed.", self.line)
 
     def res_shrink(self, pram1):
-        """ Turns a datatype like 'BYTE' into asm uninitialized datatypes, like 'resb'.
+        """ Turns a datatype like 'BYTE' into asm uninitialized datatypes,
+            like 'resb'.
             pram1 = Datatype to shrink.
         """
         if pram1 == "BYTE" or pram1 == "BOOL" or pram1 == "STRING":
@@ -1267,9 +1316,12 @@ class Parser():
             pram1 = Datatype to shrink.
         """
 
-        if pram1 == "BYTE" or pram1 == "BOOL" or (pram1.startswith("PTR") and self.options["BIT"] == 8):
+        if (pram1 == "BYTE" or
+            pram1 == "BOOL" or
+                (pram1.startswith("PTR") and self.options["BIT"] == 8)):
             return "al"
-        elif pram1 == "SHORT" or (pram1.startswith("PTR") and self.options["BIT"] == 16):
+        elif (pram1 == "SHORT" or
+              (pram1.startswith("PTR") and self.options["BIT"] == 16)):
             return "ax"
         elif (pram1 == "INT" or
               (pram1 == "STRING" and self.options["BIT"] == 32) or
@@ -1277,7 +1329,8 @@ class Parser():
               pram1 in self.classes or
               (pram1.startswith("PTR") and self.options["BIT"] == 32)):
             return "eax"
-        elif pram1 == "LONG" and (pram1.startswith("PTR") and self.options["BIT"] == 64):
+        elif (pram1 == "LONG" and
+              (pram1.startswith("PTR") and self.options["BIT"] == 64)):
             return "rax"
         elif pram1 == "EMPTY":
             return "eax"
@@ -1340,7 +1393,7 @@ class Parser():
             return "word"
         elif (pram1 == "INT" or
               (pram1 == "STRING" and self.options["BIT"] == 32) or
-               pram1 in self.structs):
+              pram1 in self.structs):
             return "dword"
         elif pram1 == "LONG":
             return "qword"
@@ -1354,12 +1407,13 @@ class Parser():
         """
 
         if (pram1.startswith("[") and
-            pram1.endswith("]")):
+                pram1.endswith("]")):
             pram1 = pram1[1:-1]
 
         for i in self.classes[self.class_namespace][self.function_namespace]:
             if i == pram1:
-                return self.classes[self.class_namespace][self.function_namespace][i]["datatype"]
+                return self.classes[self.class_namespace][
+                    self.function_namespace][i]["datatype"]
 
         if pram1 in self.classes[self.class_namespace]:
             return pram1
@@ -1399,18 +1453,13 @@ class Parser():
         elif v > 4294967295:
             return "LONG"
         else:
-            self.internal_error("An unknown number size was passed.", "num_dtype")
+            self.internal_error("An unknown number size was passed.",
+                                "num_dtype")
 
     def locate(self, pram1):
         """ Finds the location of a stack-based variable.
             pram1 = The name of the variable.
         """
-
-        #if not self.function:
-        #    self.internal_error("Cannot call this when a function is not present!", "locate")
-
-        #if not self.function_namespace:
-        #    self.internal_error("Illegal function name!", "locate")
 
         for i in self.classes["__global__"]["__global__"]:
             if i == pram1:
@@ -1418,7 +1467,8 @@ class Parser():
 
         for i in self.classes[self.class_namespace][self.function_namespace]:
             if i == pram1:
-                return "[ebp%s]" % self.classes[self.class_namespace][self.function_namespace][i]["location"]
+                return "[ebp%s]" % self.classes[self.class_namespace][
+                    self.function_namespace][i]["location"]
 
         self.internal_error("Unknown variable namespace!", "locate")
         exit(0)
@@ -1429,7 +1479,8 @@ class Parser():
         """
 
         for i in self.classes[self.class_namespace][self.function_namespace]:
-            if pram1 == self.classes[self.class_namespace][self.function_namespace][i]["location"]:
+            if pram1 == self.classes[self.class_namespace][
+                    self.function_namespace][i]["location"]:
                 return i
 
         self.internal_error("Unknown stack location!", "vlocate")
@@ -1441,9 +1492,11 @@ class Parser():
         """
 
         if self.function:
-            for i in self.classes[self.class_namespace][self.function_namespace]:
+            for i in self.classes[self.class_namespace][
+                    self.function_namespace]:
                 if pram1 == i:
-                    return self.classes[self.class_namespace][self.function_namespace][i]["datatype"]
+                    return self.classes[self.class_namespace][
+                        self.function_namespace][i]["datatype"]
         return ""
 
     def var_exists(self, pram1):
@@ -1473,37 +1526,39 @@ class Parser():
             while pram1:
                 if ord(pram1[0]) <= 0xFF:
 
-                    # Escape characters are proccessed by the compiler, not by a lib function.
+                    # Escape characters are proccessed by the compiler,
+                    # not by a Python function.
                     if pram1[0] == "\\":
 
                         # Common escape characters supported.
                         # NOTE: Move this to create_string in parser!
                         if pram1[1] == "0":
-                            newstring += "\", 0x00, \"" # BEL # NUL
+                            newstring += "\", 0x00, \""  # NUL
                         elif pram1[1] == "a":
-                            newstring += "\", 0x07, \"" # BEL
+                            newstring += "\", 0x07, \""  # BEL
                         elif pram1[1] == "b":
-                            newstring += "\", 0x08, \"" # BS
+                            newstring += "\", 0x08, \""  # BS
                         elif pram1[1] == "t":
-                            newstring += "\", 0x09, \"" # HT
+                            newstring += "\", 0x09, \""  # HT
                         elif pram1[1] == "n":
-                            newstring += "\", 0x0A, \"" # LF
+                            newstring += "\", 0x0A, \""  # LF
                         elif pram1[1] == "v":
-                            newstring += "\", 0x0B, \"" # VT
+                            newstring += "\", 0x0B, \""  # VT
                         elif pram1[1] == "f":
-                            newstring += "\", 0x0C, \"" # FF
+                            newstring += "\", 0x0C, \""  # FF
                         elif pram1[1] == "r":
-                            newstring += "\", 0x0D, \"" # CR
+                            newstring += "\", 0x0D, \""  # CR
                         elif pram1[1] == "e":
-                            newstring += "\", 0x1B, \"" # ESC
+                            newstring += "\", 0x1B, \""  # ESC
                         elif pram1[1] == "\"":
-                            newstring += "\", 0x22, \"" # "
+                            newstring += "\", 0x22, \""  # "
                         elif pram1[1] == "\'":
-                            newstring += "\", 0x27, \"" # '
+                            newstring += "\", 0x27, \""  # '
                         elif pram1[1] == "\\":
-                            newstring += "\", 0x5C, \"" # \
+                            newstring += "\", 0x5C, \""  # \
                         else:
-                            self.parser_error("Unknown escape character!", self.line)
+                            self.parser_error("Unknown escape character!",
+                                              self.line)
                             exit(-1)
 
                         # Remove both characters.
@@ -1515,7 +1570,8 @@ class Parser():
                         pram1 = pram1[1:]
 
                 else:
-                    self.parser_error("Character exceeds the size of a byte!", self.line)
+                    self.parser_error("Character exceeds the size of a byte!",
+                                      self.line)
                     exit(-1)
 
             newstring += ", 0x00"
@@ -1535,8 +1591,8 @@ class Parser():
             pram1 = The location of the lexer's list.
         """
 
-        mstr = "" # The string that will be converted to RPN.
-        mlist = [] # A list that store all of the RPN expression.
+        mstr = ""  # The string that will be converted to RPN.
+        mlist = []  # A list that store all of the RPN expression.
         glob = False
         assign = False
 
@@ -1588,58 +1644,71 @@ class Parser():
                     pass
                 elif (mlist[i] == "." and
                       mlist[i-1].startswith("[ebp") and
-                      self.vtype(self.vlocate(mlist[i-1][4:-1])) in self.structs):
+                      self.vtype(
+                          self.vlocate(mlist[i-1][4:-1])) in self.structs):
 
                     # Sloppy, but usable structure support.
-                    temp_mlist.append("[ebp{}+{}.{}]".format(mlist[i-1][4:-1],
-                                                             self.vtype(self.vlocate(mlist[i-1][4:-1])),
-                                                             mlist[i+1]))
+                    temp_mlist.append("[ebp{}+{}.{}]".format(
+                        mlist[i-1][4:-1],
+                        self.vtype(self.vlocate(mlist[i-1][4:-1])),
+                        mlist[i+1]))
 
                     del temp_mlist[-2]
                     mlist[i+1] = None
 
                 elif (mlist[i] == "." and
                       mlist[i-1].startswith("[ebp") and
-                      self.vtype(self.vlocate(mlist[i-1][4:-1])) in self.classes):
+                      self.vtype(
+                          self.vlocate(mlist[i-1][4:-1])) in self.classes):
 
                     # Sloppy, but usable method support.
-                    temp_mlist.append("func [ebp{}+{}.{}]".format(mlist[i-1][4:-1],
-                                                                  self.vlocate(mlist[i-1][4:-1]),
-                                                                  mlist[i+1]))
+                    temp_mlist.append("func [ebp{}+{}.{}]".format(
+                        mlist[i-1][4:-1],
+                        self.vlocate(mlist[i-1][4:-1]),
+                        mlist[i+1]))
 
                     del temp_mlist[-2]
                     mlist[i+1] = None
 
                 elif mlist[i] == "@":
                     # Make sure @ is used correctly!
-                    if not (mlist[i-1].startswith("[ebp") and mlist[i-1].endswith("]")):
-                        self.parser_error("Incorrect use of the @ operator!", self.line)
+                    if not (mlist[i-1].startswith("[ebp") and
+                            mlist[i-1].endswith("]")):
+                        self.parser_error("Incorrect use of the @ operator!",
+                                          self.line)
                         exit(-1)
 
-                    # Get the address of the variable, even if it's stack-based!
+                    # Get the address of the variable,
+                    # even if it's stack-based!
                     mlist[i-1] = mlist[i-1].lstrip("[").rstrip("]")
                     del temp_mlist[-1]
                     temp_mlist.append("ebp")
                     temp_mlist.append(mlist[i-1][4:])
                     temp_mlist.append(mlist[i-1][3:4])
 
-
-                elif not mlist[i].isdigit() and mlist[i] not in RPN.ops and self.var_exists(mlist[i]):
+                elif (not mlist[i].isdigit() and
+                      mlist[i] not in RPN.ops and
+                      self.var_exists(mlist[i])):
                     temp_mlist.append(self.locate(mlist[i]))
                     mlist[i] = temp_mlist[-1]
+
                 elif mlist[i].find("\"") != -1:
                     temp_mlist.append(self.create_string(mlist[i]))
                     mlist[i] = temp_mlist[-1]
-                elif not mlist[i].isdigit() and mlist[i] not in RPN.ops and not self.var_exists(mlist[i]):
+
+                elif (not mlist[i].isdigit() and
+                      mlist[i] not in RPN.ops and
+                      not self.var_exists(mlist[i])):
                     temp_mlist.append("func {}".format(mlist[i]))
                     mlist[i] = temp_mlist[-1]
+
                 else:
                     temp_mlist.append(mlist[i])
 
             mlist = temp_mlist
 
             # Remove all None types now that we're out of a loop.
-            mlist = [i for i in mlist if i != None]
+            mlist = [i for i in mlist if i is not None]
 
             self.out.append("; Expanded RPN: `%s`" % " ".join(mlist))
 
@@ -1651,10 +1720,14 @@ class Parser():
 
         while mlist:
             if mlist and mlist[0] not in RPN.ops:
-                if len(mlist) > 1 and (mlist[1] not in RPN.ops or mlist[1] in ("True", "False")) and mov_set:
+                if (len(mlist) > 1 and
+                    (mlist[1] not in RPN.ops or
+                     mlist[1] in ("True", "False"))
+                        and mov_set):
                     self.out.append("push %s" % reg)
                     stack.append("(")
                     mov_set = False
+
                 elif mlist[0].startswith("func "):
                     # Call math over and over...
                     func = mlist[0][5:]
@@ -1696,26 +1769,35 @@ class Parser():
                             # Actually do something...
                             self.math(templist, True)
                             self.out.append("push eax")
-                        elif templist and templist[0].startswith("ebp"):  # Old code; Needed?
+
+                        # Old code is this really needed anymore?
+                        elif templist and templist[0].startswith("ebp"):
                             self.out.append("mov eax, ebp")
                             if "+" in templist[0]:
-                                self.out.append("add eax, {}".format(templist[0][4:]))
+                                self.out.append("add eax, {}".format(
+                                    templist[0][4:]))
                             else:
-                                self.out.append("sub eax, {}".format(templist[0][4:]))
+                                self.out.append("sub eax, {}".format(
+                                    templist[0][4:]))
                             self.out.append("push eax")
                         elif templist:
                             self.out.append("push dword %s" % templist[0])
 
                     if "." in func:
-                        self.out.append("call [{}+_class_{}.{}]".format(func.split("+")[0][1:],
-                                                                        self.dtype(func.split(".")[0].split("+")[1]),
-                                                                        self.get_function_name(func.split(".")[1][:-1],
-                                                                        moretemp,
-                                                                        cls=self.dtype(func.split(".")[0].split("+")[1]))))
+                        self.out.append("call [{}+_class_{}.{}]".format(
+                            func.split("+")[0][1:],
+                            self.dtype(func.split(".")[0].split("+")[1]),
+                            self.get_function_name(func.split(".")[1][:-1],
+                                                   moretemp,
+                                                   cls=self.dtype(
+                                                       func.split(".")[
+                                                           0].split("+")[1]))))
                     else:
-                        self.out.append("call {}".format(self.get_function_name(func, moretemp)))
+                        self.out.append("call {}".format(
+                            self.get_function_name(func, moretemp)))
                     if size:
-                        self.out.append("add esp, %d" % size) # TBD handle typecasting changes!
+                        # TBD handle typecasting changes!
+                        self.out.append("add esp, %d" % size)
                     mov_set = True
                 else:
                     stack.append(mlist[0])
@@ -1736,7 +1818,7 @@ class Parser():
                     self.out.append("push dword %s" % stack[-1])
                     self.out.append("call ___strindex")
                     self.out.append("add esp, 8")
-                elif self.dtype(stack[-1]).startswith("PTR"): # POINTERS DON'T WORK!!!!
+                elif self.dtype(stack[-1]).startswith("PTR"):
 
                     # Factor in pointer offsets.
                     if self.dtype(stack[-1]).endswith("16"):
@@ -1800,17 +1882,19 @@ class Parser():
                     del stack[i]
                     mov_set = True
 
-
                 # ***NOTE: WORK ON STRING SUPPORT!***
 
                 # Actually do what the operator says.
-                if mlist[0] == "+" and stack[-1] == "1" and self.datatype == "INT":
+                if (mlist[0] == "+" and
+                    stack[-1] == "1" and
+                        self.datatype == "INT"):
                     self.out.append("inc %s" % reg)
                 elif mlist[0] == "+" and self.datatype == "INT":
                     self.out.append("add %s, %s" % (reg, stack[-1]))
                 elif mlist[0] == "+" and self.datatype == "STRING":
                     if self.dtype(stack[-1]) != "STRING":
-                        self.parser_error("Cannot convert '%s' to 'STRING' implicitly." % self.dtype(stack[-1]),
+                        self.parser_error("Cannot convert '%s' to 'STRING' i"
+                                          "mplicitly." % self.dtype(stack[-1]),
                                           self.line)
                     self.out.append("push dword %s" % stack[-1])
                     self.out.append("push %s" % reg)
@@ -1823,18 +1907,17 @@ class Parser():
                     self.out.append("sub %s, %s" % (reg, stack[-1]))
                 elif mlist[0] == "*" and typea[-1] == "INT":
                     self.out.append("mov %s, %s" % (regd, stack[-1]))
-                    self.out.append("mul %s" %  regd)
+                    self.out.append("mul %s" % regd)
                 elif mlist[0] == "*" and typea[-1] == "STRING":
                     if reg_dtype != "INT":
-                        self.parser_error("Cannot multiply sequence type 'STRING' by non-int of type '%s'." % self.dtype(stack[-1]),
+                        self.parser_error("Cannot multiply sequence type "
+                                          "'STRING' by non-int of type "
+                                          "'%s'." % self.dtype(stack[-1]),
                                           self.line)
                     self.out.append("push dword %s" % stack[-1])
                     self.out.append("push %s" % reg)
                     self.out.append("call ___striter")
                     self.out.append("add esp, 8")
-
-##                elif mlist[0] == "/":
-##                    pass
                 elif mlist[0] == "//":
                     self.out.append("xor %s, %s" % (regd, regd))
                     self.out.append("mov %s, %s" % (regc, stack[-1]))
@@ -1868,9 +1951,8 @@ class Parser():
                 elif mlist[0] == "-=":
                     self.out.append("sub %s, %s" % (stack[-1], reg))
                 elif mlist[0] == "*=":
-                    self.out.append("mul dword %s" %  stack[-1])
+                    self.out.append("mul dword %s" % stack[-1])
                     self.out.append("mov %s, %s" % (stack[-1], reg))
-##                elif mlist[0] == "/=":
                 elif mlist[0] == "//=":
                     self.out.append("xor %s, %s" % (regd, regd))
                     self.out.append("mov %s, %s" % (regc, reg))
@@ -1887,9 +1969,6 @@ class Parser():
                     self.out.append("shl %s, %s" % (stack[-1], reg))
                 elif mlist[0] == ">>=":
                     self.out.append("shr %s, %s" % (stack[-1], reg))
-##                elif mlist[0] == "<->":
-##                    self.out.append("xchg")
-##                    self.out.append("mov %s, %s" % (stack[-1], reg))
                 elif mlist[0] == "==":
                     self.out.append("mov %s, %s" % (regb, stack[-1]))
                     self.out.append("test %s, %s" % (reg, regb))
