@@ -2,7 +2,7 @@
 
 import pop
 from pop.pop_rpn import *
-
+from collections import OrderedDict
 
 class Parser():
     """This class contains the praser for Pop."""
@@ -54,11 +54,11 @@ class Parser():
         # Setup class values.
         self.cls = False  # NOTE: Cannot be self.class
         self.class_namespace = "__global__"
-        self.classes = {"__global__":
-                        {"__global__": {}
-                         }
-                        }
 
+        # Ordered dictionary help with class building!
+        self.classes = OrderedDict([("__global__",
+                                     OrderedDict([("__global__",
+                                                   OrderedDict())]))])
         # Setup function values.
         self.function = False
         self.function_signed = False
@@ -209,13 +209,15 @@ class Parser():
                         self.location -= 4
                     for i in self.classes[pram1[0][1]]:
                         self.out.append("mov dword [ebp{0}+_class_{3}._{1}@"
-                                        "{2} ], {3}._{1}@{2}".format(
+                                        "{2}], {3}._{1}@{2}".format(
                                             self.location,
                                             i,
                                             self.function_size(
                                                 i,
                                                 cls=pram1[0][1]),
                                             pram1[0][1]))
+
+                    self.out.append("")
 
                 elif self.function and self.datatype in self.structs:
                     l = 0
