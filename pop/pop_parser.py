@@ -46,7 +46,7 @@ class Parser():
         self.line = -1
 
         # This holds a list of all the global structures.
-        self.structs = {}
+        self.structs = OrderedDict()
 
         # This holds a list of current structure indentations.
         self.current_structs = []
@@ -304,8 +304,8 @@ class Parser():
             # For already declared variables.
             elif pram1[0][0] == "NAMESPACE":
 
-                if self.classes[self.class_namespace][self.function_namespace][
-                        pram1[0][1]]:
+                if pram1[0][1] in self.classes[self.class_namespace][
+                        self.function_namespace]:
 
                     self.namespace = pram1[0][1]
 
@@ -316,6 +316,15 @@ class Parser():
                         self.function_namespace][pram1[0][1]]["datatype"]
 
                     self.math(pram1)
+
+                elif (pram1[0][1] == "self" and
+                      self.class_namespace != "__global__"):
+
+                    self.namespace = pram1[0][1]
+
+                    self.signed = False
+
+                    self.datatype = self.class_namespace
 
                 else:
                     self.parser_error("Variable `%s` is undefined!" %
@@ -367,7 +376,9 @@ class Parser():
             self.out.insert(self.out_offset, "")
             self.out.insert(self.out_offset, "endstruc")
 
-            for x in self.classes[i]:
+            tempcls = tuple(self.classes[i].keys())[::-1]
+
+            for x in tempcls:
                 self.out.insert(self.out_offset,
                                 "    ._{0}@{1}: resd 1".format(
                                     x,
@@ -663,7 +674,7 @@ class Parser():
         self.externs.append("_%s@%d" % (func, dec))
 
         if func not in self.classes[self.class_namespace]:
-            self.classes[self.class_namespace][func] = {}
+            self.classes[self.class_namespace][func] = OrderedDict()
         else:
             self.parser_error("Cannot redeclare a function!.", self.line)
             exit(0)
@@ -903,7 +914,7 @@ class Parser():
             self.parser_error("You cannot redefine a class!", self.line)
             exit(1)
 
-        self.classes[self.class_namespace] = {}
+        self.classes[self.class_namespace] = OrderedDict()
 
         # Delete the class's namespace.
         del pram1[0]
@@ -1744,9 +1755,9 @@ class Parser():
                     count = 1
                     size = 0
                     moretemp = []
+
                     while count:
                         templist = []
-                        size += 4
                         if count and mlist and mlist[0] == ")":
                             count -= 1
                         if count and mlist and mlist[0] != ",":
@@ -1757,6 +1768,8 @@ class Parser():
                                     mlist[1])))
                             else:
                                 moretemp.append(self.dtype(mlist[0]))
+                            size += 4
+
                         while count and mlist and mlist[0] != ",":
                             if mlist[0] == "(":
                                 count += 1
