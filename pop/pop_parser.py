@@ -309,22 +309,27 @@ class Parser():
 
                     self.namespace = pram1[0][1]
 
-                    self.signed = self.classes[self.class_namespace][
-                        self.function_namespace][pram1[0][1]]["signed"]
+                    if pram1[0][1] == "self":
+                        self.signed = False
+                        self.datatype = self.class_namespace
+                    else:
+                        self.signed = self.classes[self.class_namespace][
+                            self.function_namespace][pram1[0][1]]["signed"]
 
-                    self.datatype = self.classes[self.class_namespace][
-                        self.function_namespace][pram1[0][1]]["datatype"]
+                        self.datatype = self.classes[self.class_namespace][
+                            self.function_namespace][pram1[0][1]]["datatype"]
+
+                    i = 0
+                    if self.dtype(pram1[0][1]) in self.classes:
+                        while True:
+                            if pram1[i][1] == "(":
+                                pram1.insert(i+1, ["NAMESPACE", pram1[0][1]])
+                                if pram1[i+2][1] != ")":
+                                    pram1.insert(i+2, ["OPERATOR", ","])
+                                break
+                            i += 1
 
                     self.math(pram1)
-
-                elif (pram1[0][1] == "self" and
-                      self.class_namespace != "__global__"):
-
-                    self.namespace = pram1[0][1]
-
-                    self.signed = False
-
-                    self.datatype = self.class_namespace
 
                 else:
                     self.parser_error("Variable `%s` is undefined!" %
@@ -814,6 +819,14 @@ class Parser():
             location = 8
 
             temp_list = {}
+
+            # Classes have a special class variable.
+            if self.class_namespace != "__global__":
+                    temp_list["self"] = {"signed": False,
+                                         "datatype": self.class_namespace,
+                                         "location": "+%d" % location}
+                    location += 4
+
             while (pram1[0][0] != "OPERATOR") and (pram1[0][1] != ")"):
                 if (pram1[0][0] == "INDENT"):
                     self.parser_error("Expected a closing parenthese!",
@@ -1512,6 +1525,7 @@ class Parser():
                         self.function_namespace][i]["datatype"]
         return ""
 
+
     def var_exists(self, pram1):
         """ Tests to see if the given variable name exists.
             pram1 = The name of the variable.
@@ -1799,13 +1813,15 @@ class Parser():
                             self.out.append("push dword %s" % templist[0])
 
                     if "." in func:
-                        self.out.append("call [{}+_class_{}.{}]".format(
-                            func.split("+")[0][1:],
-                            self.dtype(func.split(".")[0].split("+")[1]),
+                        print(func[4])
+                        self.out.append("call [ebp{}{}+_class_{}.{}]".format(
+                            func[4],
+                            func[5:].split("+")[0],
+                            self.dtype(func[5:].split(".")[0].split("+")[1]),
                             self.get_function_name(func.split(".")[1][:-1],
                                                    moretemp,
                                                    cls=self.dtype(
-                                                       func.split(".")[
+                                                       func[5:].split(".")[
                                                            0].split("+")[1]))))
                     else:
                         self.out.append("call {}".format(

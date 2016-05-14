@@ -1,4 +1,7 @@
 ## [Unreleased]
+###
+- The keyword self has been implemented.
+
 ### Fixed
 - A major clean-up call bug.
 
