@@ -206,48 +206,6 @@ class Parser():
                     self.location -= 8
                 elif self.function and self.datatype in self.classes:
                     self.location -= 4
-                    x = 0
-                    for i in self.classes[pram1[0][1]]:
-                        if i != "__global__":
-                            x += 4
-                        else:
-                            for n in self.classes[pram1[0][1]]["__global__"]:
-                                n = self.classes[pram1[0][1]]["__global__"][n][
-                                    "datatype"]
-                                if n == "BYTE":
-                                    x += 1
-                                elif n == "SHORT":
-                                    x += 2
-                                elif n == "INT":
-                                    x += 4
-                                elif n == "LONG":
-                                    x += 8
-                                else:
-                                    self.internal_error(
-                                        "Unknown datatype in class field!",
-                                        "math")
-
-                    # Allocate the the class!
-                    self.out.append("push dword {!s}".format(x))
-                    self.out.append("call ___malloc")
-                    self.out.append("add esp, 4")
-                    self.out.append("mov [ebp{!s}], eax".format(self.location))
-                    self.out.append("")
-
-                    self.out.append("mov ebx, eax")
-
-                    for i in self.classes[pram1[0][1]]:
-                        if i != "__global__":
-                            self.out.append("mov dword [ebx+_class_{3}._{1}"
-                                            "@{2}], {3}._{1}@{2}".format(
-                                                 self.location,
-                                                 i,
-                                                 self.function_size(
-                                                     i,
-                                                     cls=pram1[0][1]),
-                                                 pram1[0][1]))
-
-                    self.out.append("")
 
                 elif self.function and self.datatype in self.structs:
                     l = 0
@@ -1077,6 +1035,59 @@ class Parser():
                 self.parser_error("Indentation error!", self.line)
                 exit(1)
 
+            x = 0
+
+            for i in self.classes[self.class_namespace]:
+                if i != "__global__":
+                    x += 4
+                else:
+                    for n in self.classes[self.class_namespace]["__global__"]:
+                        n = self.classes[self.class_namespace]["__global__"][
+                            n][ "datatype"]
+                        if n == "BYTE":
+                            x += 1
+                        elif n == "SHORT":
+                            x += 2
+                        elif n == "INT":
+                            x += 4
+                        elif n == "LONG":
+                            x += 8
+                        else:
+                            self.internal_error(
+                                "Unknown datatype in class field!",
+                                "do_indent")
+
+            self.out.append(".___new___E@4:")
+            self.out.append("push ebp")
+            self.out.append("mov ebp, esp")
+            self.out.append("")
+
+            # Allocate the the class!
+            self.out.append("push dword {!s}".format(x))
+            self.out.append("call ___malloc")
+            self.out.append("add esp, 4")
+            self.out.append("")
+
+            self.out.append("mov ebx, eax")
+            self.out.append("")
+
+            for i in self.classes[self.class_namespace]:
+                if i != "__global__":
+                    self.out.append("mov dword [ebx+_class_{3}._{1}"
+                                    "@{2}], {3}._{1}@{2}".format(
+                                         self.location,
+                                         i,
+                                         self.function_size(
+                                             i,
+                                             cls=self.class_namespace),
+                                         self.class_namespace))
+
+            self.out.append("")
+            self.out.append("mov esp, ebp")
+            self.out.append("pop ebp")
+            self.out.append("ret")
+            self.out.append("")
+
             del self.indent[-1]  # Delete it now.
 
             # Reset the class parameters.
@@ -1887,6 +1898,8 @@ class Parser():
                                                    moretemp,
                                                    cls=func[5:].split(".")[0])
                                         ))
+                    elif func in self.classes:
+                        self.out.append("call {}.___new___E@4".format(func))
                     else:
                         self.out.append("call {}".format(
                             self.get_function_name(func, moretemp)))
