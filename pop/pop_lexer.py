@@ -399,7 +399,7 @@ class Lexer():
                         line = ""
 
                 # Namespace start here.
-                elif line[0] in string.ascii_letters:
+                elif line[0] in string.ascii_letters+"_":
                     if self.contains(line, self.operators+[" "]):
                         n = self.find_first(line, self.operators+[" "])
                         name = line[:line.find(n)].strip()

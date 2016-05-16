@@ -1,6 +1,12 @@
 import stdlib.pop
 
+# Class test file.
 class dog:
+
+    int age
+
+    func empty __init__():
+        self.age = 3
 
     func empty bark():
         println("Bark!")
@@ -11,16 +17,29 @@ class dog:
     func empty humanAge(int a):
         println(a*7)
 
+    func int getAge():
+        return self.age
+
     func empty talk():
         self.bark()
         self.woof()
 
 func int main():
-    # Initialize an instance of the class.
+    # Initialize instances of the class.
     dog b
+    dog c
+
+    # Initialize the class!
+    # NOTE: This should be done via the compiler.
+    b.__init__()
+    c.__init__()
+
+    c.age = 7
 
     # Run the class's methods.
     b.bark()
     b.woof()
     b.talk()
-    b.humanAge(3)
+    b.humanAge(b.age)
+    c.humanAge(c.age)
+    c.woof()

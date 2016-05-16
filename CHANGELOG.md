@@ -1,9 +1,13 @@
 ## [Unreleased]
 ### Added
 - The keyword self has been implemented.
+- Classes can now have their own local variables.
+
+### Changed
+- Classes are now allocated in the heap instead of on the stack.
 
 ### Fixed
-- A major clean-up call bug.
+- Fixed a major clean-up call bug that would corrupt the stack.
 
 ## [0.2.0] - 2016-5-11
 ### Added
