@@ -2,9 +2,11 @@
 ### Added
 - The keyword self has been implemented.
 - Classes can now have their own local variables.
+- Classes now initialize automatically when \_\_new\_\_() is called.
 
 ### Changed
 - Classes are now allocated in the heap instead of on the stack.
+- Classes are now created by calling the \_\_new\_\_() method.
 
 ### Fixed
 - Fixed a major clean-up call bug that would corrupt the stack.

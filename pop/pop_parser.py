@@ -1035,6 +1035,25 @@ class Parser():
                 self.parser_error("Indentation error!", self.line)
                 exit(1)
 
+            self.classes[self.class_namespace]["__new___E"] = OrderedDict()
+
+            # If __init__() doesn't exist, added it!
+            if "__init__" not in self.classes[self.class_namespace]:
+                self.classes[self.class_namespace]["__init___E"] = \
+                {"self": {"signed": False,
+                          "datatype": self.class_namespace,
+                          "location": "+8"}}
+
+                self.out.append(".___init___E@4:")
+                self.out.append("push ebp")
+                self.out.append("mov ebp, esp")
+                self.out.append("")
+                self.out.append("xor eax, eax")
+                self.out.append("mov esp, ebp")
+                self.out.append("pop ebp")
+                self.out.append("ret")
+                self.out.append("")
+
             x = 0
 
             for i in self.classes[self.class_namespace]:
@@ -1057,9 +1076,10 @@ class Parser():
                                 "Unknown datatype in class field!",
                                 "do_indent")
 
-            self.out.append(".___new___E@4:")
+            self.out.append(".___new___E@0:")
             self.out.append("push ebp")
             self.out.append("mov ebp, esp")
+            self.out.append("sub esp, 4")
             self.out.append("")
 
             # Allocate the the class!
@@ -1082,7 +1102,14 @@ class Parser():
                                              cls=self.class_namespace),
                                          self.class_namespace))
 
+            self.out.append("mov [ebp-4], eax")
+            self.out.append("push eax")
+            self.out.append("call dword [ebx+_class_{}.___init___E@4]".format(
+                self.class_namespace))
+            self.out.append("add esp, 4")
             self.out.append("")
+
+            self.out.append("mov eax, [ebp-4]")
             self.out.append("mov esp, ebp")
             self.out.append("pop ebp")
             self.out.append("ret")
@@ -1899,7 +1926,7 @@ class Parser():
                                                    cls=func[5:].split(".")[0])
                                         ))
                     elif func in self.classes:
-                        self.out.append("call {}.___new___E@4".format(func))
+                        self.out.append("call {}.___new___E@0".format(func))
                     else:
                         self.out.append("call {}".format(
                             self.get_function_name(func, moretemp)))
