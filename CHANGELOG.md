@@ -1,4 +1,4 @@
-## [Unreleased]
+## [0.2.1] - 2016-5-16
 ### Added
 - The keyword self has been implemented.
 - Classes can now have their own local variables.
@@ -50,6 +50,6 @@
 ### Added
 - Initial release committed.
 
-[Unreleased]: https://github.com/I8087/Pop/compare/v0.2.0...master
+[0.2.1]: https://github.com/I8087/Pop/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/I8087/Pop/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/I8087/Pop/compare/v0.1...v0.1.1
