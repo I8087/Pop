@@ -1,43 +1,40 @@
 import stdlib.pop
 
-# Class test file.
-class dog:
 
-    int age
+func int len(ptr8 s):
+    int i = 0
+    while s[i] != 0:
+        i += 1
+    return i
+
+class str:
+    ptr8 p
 
     func empty __init__():
-        self.age = 3
+        self.p = 0
 
-    func empty bark():
-        println("Bark!")
+    func empty __set__(ptr8 s):
+        if self.p != 0:
+            free(self.p)
 
-    func empty woof():
-        println("Woof!")
+        int a = len(s)
+        println(a)
 
-    func empty humanAge():
-        println(self.age*7)
+        # Problems with self.p = malloc(len(s)+1)
+        self.p = malloc(a)
 
-    func int getAge():
-        return self.age
+        int i = 0
 
-    func empty talk():
-        self.bark()
-        self.woof()
+        println("HEY!!!")
+
+        while s[i] != 0:
+            self.p[i] = s[i]
+            putchar(self.p[i])
+            i += 1
+
+        self.p[i+1] = '\0'
 
 func int main():
-    # Initialize instances of the class.
-    dog b = dog()
-    dog c = dog()
-
-    dog d = c
-
-    c.age = 7
-
-    # Run the class's methods.
-    d.humanAge()
-    b.bark()
-    b.woof()
-    b.talk()
-    b.humanAge()
-    c.humanAge()
-    c.woof()
+    str mystring = str()
+    mystring.__set__("hello, world!")
+    #println(mystring.p)

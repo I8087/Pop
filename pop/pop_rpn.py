@@ -132,7 +132,9 @@ class RPN():
                 outstack.append("[")
 
             elif i == "]":
-                while opstack and opstack[-1] != i:
+                while (opstack and
+                       opstack[-1] != i
+                       and self.ops[opstack[-1]][0] < 15):
                     outstack.append(opstack[-1])
                     del opstack[-1]
 

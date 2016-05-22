@@ -1,3 +1,10 @@
+## [Unreleased]
+### Fixed
+- Fixed a bug that didn't allow for \_\_init\_\_() to be defined.
+- Fixed a bug in an error message that crashed the compiler.
+- Fixed a bug that didn't allow nested function calling.
+- Fixed various class bugs and errors.
+
 ## [0.2.1] - 2016-5-16
 ### Added
 - The keyword self has been implemented.
@@ -50,6 +57,7 @@
 ### Added
 - Initial release committed.
 
+[Unreleased]: https://github.com/I8087/Pop/compare/v0.2.1...master
 [0.2.1]: https://github.com/I8087/Pop/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/I8087/Pop/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/I8087/Pop/compare/v0.1...v0.1.1

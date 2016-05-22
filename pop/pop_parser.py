@@ -101,6 +101,8 @@ class Parser():
 
         self.location = 0
 
+        self.mathpop = []
+
     def parser(self, pram1, pram2, pram3, pram4, pram5={"__global__": []}):
         """This function parser's a list created by the lexer.
            pram1 = This is the list created by the lexer.
@@ -308,9 +310,8 @@ class Parser():
                         self.datatype = self.classes[self.class_namespace][
                             self.function_namespace][pram1[0][1]]["datatype"]
 
-#                    if [x for x in self.classes[
-#                        self.class_namespace] if x.startswith(pram1[0][1])]:
-                    if self.dtype(pram1[0][1]) in self.classes:
+                    if (self.dtype(pram1[0][1]) in self.classes and
+                        [x for x in self.classes[self.dtype(pram1[0][1])] if x.startswith(pram1[2][1])]):
                         i = 0
                         while True:
                             if pram1[i][1] == "(":
@@ -745,6 +746,15 @@ class Parser():
                     temp += "_A"
                 elif pram1[0][1] == "BOOL":
                     temp += "_G"
+                elif pram1[0][1] == "PTR8":
+                    temp += "_PB"                
+                elif pram1[0][1] == "PTR16":
+                    temp += "_PS"
+                elif pram1[0][1] == "PTR32":
+                    temp += "_PI"
+                elif pram1[0][1] == "PTR64":
+                    temp += "_PL"
+                    dec += 4
 
                 dec += 4
 
@@ -889,6 +899,14 @@ class Parser():
                 temp += "_G"
             elif i == "STRING":
                 temp += "_A"
+            elif i == "PTR8":
+                temp += "_PB"
+            elif i == "PTR16":
+                temp += "_PS"
+            elif i == "PTR32":
+                temp += "_PI"
+            elif i == "PTR64":
+                temp += "_PL"
 
         if not temp:
             temp = "_E"
@@ -1038,7 +1056,7 @@ class Parser():
             self.classes[self.class_namespace]["__new___E"] = OrderedDict()
 
             # If __init__() doesn't exist, added it!
-            if "__init__" not in self.classes[self.class_namespace]:
+            if "__init___E" not in self.classes[self.class_namespace]:
                 self.classes[self.class_namespace]["__init___E"] = \
                 {"self": {"signed": False,
                           "datatype": self.class_namespace,
@@ -1067,7 +1085,7 @@ class Parser():
                             x += 1
                         elif n == "SHORT":
                             x += 2
-                        elif n == "INT":
+                        elif n == "INT" or n.startswith("PTR"):
                             x += 4
                         elif n == "LONG":
                             x += 8
@@ -1300,6 +1318,15 @@ class Parser():
                 temp += "_A"
             elif i == "BOOL":
                 temp += "_G"
+            elif i == "PTR8":
+                temp += "_PB"
+            elif i == "PTR16":
+                temp += "_PS"
+            elif i == "PTR32":
+                temp += "_PI"
+            elif i == "PTR64":
+                temp += "_PL"
+                dec += 4
 
             dec += 4
 
@@ -1329,7 +1356,15 @@ class Parser():
                 # (Probably) broken code. Keep an eye on it.
                 for t in temp_list:
                     t = t[t.find("_")+1:]
-                    if t[0] == "G" and not y:
+                    if t[0] == "PB" and not y:
+                        y = "PB"
+                    elif t[0] == "PS" and not y:
+                        y = "PS"
+                    elif t[0] == "PI" and not y:
+                        y = "PI"
+                    elif t[0] == "PL" and not y:
+                        y = "PL"
+                    elif t[0] == "G" and not y:
                         y = "G"
                     elif t[0] == "A" and not y:
                         y = "A"
@@ -1353,10 +1388,12 @@ class Parser():
             return "_%s%s@%d" % (pram1, temp, dec)
 
     def function_size(self, pram1, cls="__global__"):
-        # Incomplete, doesn't factor in class and structure sizes!
         size = 0
 
         for i in self.classes[cls][pram1]:
+            if "-" in self.classes[cls][pram1][i]["location"]:
+                continue
+
             if self.classes[cls][pram1][i]["datatype"] == "LONG":
                 size += 8
             else:
@@ -1368,32 +1405,34 @@ class Parser():
         """ Turns a datatype like 'BYTE' into asm datatypes, like 'db'.
             pram1 = Datatype to shrink.
         """
-        if pram1 == "BYTE" or pram1 == "BOOL" or pram1 == "STRING":
+        if pram1 in ("BYTE", "BOOL"):
             return "db"
         elif pram1 == "SHORT":
             return "dw"
-        elif pram1 == "INT":
+        elif pram1 in ("INT", "STRING") or pram1.startswith("PTR"):
             return "dd"
         elif pram1 == "LONG":
             return "dq"
         else:
             self.internal_error("An unknown data type was passed.", self.line)
+            exit()
 
     def res_shrink(self, pram1):
         """ Turns a datatype like 'BYTE' into asm uninitialized datatypes,
             like 'resb'.
             pram1 = Datatype to shrink.
         """
-        if pram1 == "BYTE" or pram1 == "BOOL" or pram1 == "STRING":
+        if pram1 in ("BYTE", "BOOL"):
             return "resb"
         elif pram1 == "SHORT":
             return "resw"
-        elif pram1 == "INT":
+        elif pram1 in ("INT", "STRING") or pram1.startswith("PTR"):
             return "resd"
         elif pram1 == "LONG":
             return "resq"
         else:
             self.internal_error("An unknown data type was passed.", self.line)
+            exit()
 
     def p_reg_a(self):
         """ Returns the systems memory sized ?a? register.
@@ -1523,6 +1562,9 @@ class Parser():
                 pram1.endswith("]")):
             pram1 = pram1[1:-1]
 
+        if pram1 in ("eax", "ebx", "ecx", "edx"):
+            return pram1
+
         if pram1 in self.classes[cls]:
             return pram1
 
@@ -1537,7 +1579,7 @@ class Parser():
                     self.function_namespace][i]["datatype"]
 
         if pram1.startswith("string"):
-            return "STRING"
+            return "PTR8"
 
         if pram1.isdigit():
             return "INT"
@@ -1555,7 +1597,7 @@ class Parser():
             else:
                 return self.vtype(self.vlocate(pram1[3:]))
 
-        self.parser_error("The variable '%s' is undefined!"+1 % pram1, self.line)
+        self.parser_error("The variable '%s' is undefined!" % pram1, self.line)
         exit(-1)
 
     def num_dtype(self, pram1):
@@ -1781,6 +1823,7 @@ class Parser():
                           self.vlocate(mlist[i-1][4:-1])) in self.classes):
 
                     self.out.append("mov ebx, {}".format(mlist[i-1]))
+                    typeb.append(mlist[i-1])
 
                     # Sloppy, but usable method support.
                     if [x for x in self.classes[
@@ -1856,7 +1899,7 @@ class Parser():
                 if (len(mlist) > 1 and
                     (mlist[1] not in RPN.ops or
                      mlist[1] in ("True", "False"))
-                        and mov_set):
+                    and mov_set):
                     self.out.append("push %s" % reg)
                     stack.append("(")
                     mov_set = False
@@ -1886,7 +1929,9 @@ class Parser():
                                     mlist[0],
                                     mlist[2],
                                     mlist[1])))
-                            else:
+                            elif mlist[0].startswith("func"):
+                                moretemp.append(mlist[0])
+                            elif count == 1:
                                 moretemp.append(self.dtype(mlist[0]))
                             size += 4
 
@@ -1895,10 +1940,13 @@ class Parser():
                                 count += 1
                             elif mlist[0] == ")":
                                 count -= 1
+
                             if count:
                                 templist.append(mlist[0])
                                 del mlist[0]
+
                         del mlist[0]
+
                         # Do something with the args...
                         if len(templist) > 1:
                             # Actually do something...
@@ -1965,10 +2013,23 @@ class Parser():
                     if not self.dtype(stack[-1]).endswith("8"):
                         self.out.append("mul {}".format(regd))
 
+                    #self.out.append("push {}".format(regb))
+                    #typeb.append(stack[-1])
+
+                    # WORK!!!
                     self.out.append("add {}, {}".format(reg, stack[-1]))
-                    self.out.append("mov {}, {}".format(regb, reg))
-                    self.out.append("xor {0}, {0}".format(reg))
-                    self.out.append("mov al, [{}]".format(regb))
+                    self.out.append("")
+                    if "=" in mlist and mov_set:
+                        # movsx!!!
+                        self.out.append("mov {}, {}".format(regb, reg))
+                        self.out.append("mov al, [{}]".format(regb))
+                        self.out.append("movsx {}, al".format(reg))
+                        self.out.append("pop {}".format(regb))
+                        self.out.append("mov [{}], al".format(regb))
+                    else:
+                        mlist.insert(0, "[eax]")
+                        self.out.append("push eax")
+                        self.out.append("")
                 else:
                     self.parser_error("Indexing error!", self.line)
                     exit()
@@ -2026,11 +2087,7 @@ class Parser():
                     self.out.append("inc %s" % reg)
                 elif mlist[0] == "+" and self.datatype != "STRING":
                     self.out.append("add %s, %s" % (reg, stack[-1]))
-                elif mlist[0] == "+" and self.datatype == "STRING":
-                    if self.dtype(stack[-1]) != "STRING":
-                        self.parser_error("Cannot convert '%s' to 'STRING' i"
-                                          "mplicitly." % self.dtype(stack[-1]),
-                                          self.line)
+                elif mlist[0] == "+" and self.dtype(stack[-1]) == "STRING":
                     self.out.append("push dword %s" % stack[-1])
                     self.out.append("push %s" % reg)
                     self.out.append("call ___strcat")
@@ -2132,8 +2189,12 @@ class Parser():
         if len(stack) == 1:
             self.out.append("mov %s, %s" % (reg, stack[-1]))
         elif len(stack) > 0:
+            #print(stack)
             self.internal_error("A math stack problem has occurred!", "math")
             exit(-1)
+
+        #for i in typeb:
+        #    self.out.append("pop {}".format(regb))
 
         self.out.append("")
 
