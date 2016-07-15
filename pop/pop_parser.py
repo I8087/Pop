@@ -1752,6 +1752,9 @@ class Parser():
             pram1 = The location of the lexer's list.
         """
 
+        self.out.extend(pop.Math().math(self, pram1, completed))
+        return
+
         mstr = ""  # The string that will be converted to RPN.
         mlist = []  # A list that store all of the RPN expression.
         glob = False

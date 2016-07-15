@@ -9,6 +9,7 @@ from pop.pop_lexer import *
 from pop.pop_parser import *
 from pop.pop_rpn import *
 from pop.pop_config import *
+from pop.pop_math import *
 
 print("Pop Compiler Version {0} | {1}".format(pop.__version__,
                                               pop.__copyright__)
