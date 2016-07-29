@@ -1593,7 +1593,10 @@ class Parser():
                 return "INT"
             elif "." in pram1 and "+" in pram1:
                 pram1 = pram1.split("+")[-1].split(".")
-                return self.dtype(pram1[1], cls=pram1[0][7:])
+                if pram1[0][:8] == "_class_":
+                    return self.dtype(pram1[1], cls=pram1[0][7:])
+                else:
+                    return [n["datatype"] for n in self.structs[pram1[0]] if n["namespace"] == pram1[1]][0]
             else:
                 return self.vtype(self.vlocate(pram1[3:]))
 

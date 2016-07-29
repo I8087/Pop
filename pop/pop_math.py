@@ -114,7 +114,7 @@ class Math():
             else:
                 if not self.type["a"]:
                     self.type["a"] = pparser.dtype(mlist[0])
-                    if len(mlist) == 1:
+                    if len(mlist) == 1 or "=" not in mlist[-1]:
                         self.out.append("mov {}, {}".format(self.reg["a"],
                                                             mlist[0]))
                     else:
