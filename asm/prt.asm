@@ -22,7 +22,10 @@ section .text
 %include "asm/err.asm"
 
 __start:
-    jmp _main_E@0
+    call _main_E@0
+
+    push eax
+    call ___exit
 
 ___exit:
     push ebp

@@ -1,4 +1,8 @@
 ## [Unreleased]
+
+### Changed
+- Changed the way the pop runtime exits to support all versions of Windows since Windows 95.
+
 ### Fixed
 - Fixed a bug that didn't allow for \_\_init\_\_() to be defined.
 - Fixed a bug in an error message that crashed the compiler.
