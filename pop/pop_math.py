@@ -111,6 +111,50 @@ class Math():
 
                 self.out.append("")
 
+            # Handle indexing.
+            elif mlist[0] == "[":
+                del mlist[0]
+                count = 1
+                temp = []
+
+                while count:
+                    if mlist[0] == "[":
+                        count += 1
+                    elif mlist[0] == "]":
+                        count -= 1
+                    temp.append(mlist[0])
+                    del mlist[0]
+
+                del temp[-1]
+
+                self.out.append("push ebx")
+                self.out.append("mov {}, {}".format(self.reg["b"], self.reg["a"]))
+
+                self.out.extend(Math().math(pparser, temp, True))
+
+                self.out.append("add {}, {}".format(self.reg["a"], self.reg["b"]))
+
+                if self.type["a"].startswith("PTR"):
+
+                    # Factor in pointer offsets.
+                    if self.type["a"].endswith("16"):
+                        pparser.out.append("mov {}, 2".format(self.reg["d"]))
+                    if self.type["a"].endswith("32"):
+                        pparser.out.append("mov {}, 4".format(self.reg["d"]))
+                    if self.type["a"].endswith("64"):
+                        pparser.out.append("mov {}, 8".format(self.reg["d"]))
+                    if not self.type["a"].endswith("8"):
+                        pparser.out.append("mul {}".format(self.reg["d"]))
+
+                    # movsx!!!
+                    self.out.append("mov {}, {}".format(self.reg["b"], self.reg["a"]))
+                    self.out.append("mov al, [{}]".format(self.reg["b"]))
+                    self.out.append("movsx {}, al".format(self.reg["a"]))
+                    self.out.append("pop {}".format(self.reg["b"]))
+                else:
+                    self.parser_error("Indexing error!", self.line)
+                    exit(-1)
+
             else:
                 if not self.type["a"]:
                     self.type["a"] = pparser.dtype(mlist[0])
@@ -126,6 +170,8 @@ class Math():
                 stack.append(mlist[0])
                 del mlist[0]
 
+        self.out.append("")
+
         return self.out
 
     def parser(self, pparser, mlist):
@@ -134,7 +180,18 @@ class Math():
            mlist = The location of the lexer's list.
         """
 
+        mstr = ""
+        i = 0
+
+        while True:
+            if mlist[i][0] == "INDENT":
+                break
+            mstr += " {}".format(mlist[i][1])
+            i += 1
+
+        self.out.append("; Infixed: `{}`".format(mstr.strip()))
         mlist = RPN(self.format_mlist(mlist))
+        self.out.append("; RPN: `%s`" % " ".join(mlist))
 
         temp_mlist = []
 
@@ -184,6 +241,8 @@ class Math():
                 del temp_mlist[-2]
                 mlist[i+1] = None
 
+
+            # FIX
             elif mlist[i] == "@":
                 # Make sure @ is used correctly!
                 if not (mlist[i-1].startswith("[ebp") and

@@ -426,8 +426,8 @@ class Parser():
 
                 # Excessive line breaks are flagged.
                 if (i > 0 and
-                    self.out[i] == ""and
-                    (self.out[i-1] == "" or
+                    self.out[i] == "" and
+                    (not self.out[i-1] or
                      self.out[i-1].endswith(":"))):
                     self.out[i] = None
 
@@ -1593,7 +1593,7 @@ class Parser():
                 return "INT"
             elif "." in pram1 and "+" in pram1:
                 pram1 = pram1.split("+")[-1].split(".")
-                if pram1[0][:8] == "_class_":
+                if pram1[0].startswith("_class_"):
                     return self.dtype(pram1[1], cls=pram1[0][7:])
                 else:
                     return [n["datatype"] for n in self.structs[pram1[0]] if n["namespace"] == pram1[1]][0]
