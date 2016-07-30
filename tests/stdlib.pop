@@ -7,29 +7,34 @@
 externc func empty putchar(byte c)
 externc func empty puts(string s)
 externc func empty printf(string s, int d)
-externc func int malloc(int m)
-externc func empty free(int m)
+externc func ptr8 malloc(int m)
+externc func empty free(ptr8 m)
 
 # Not much of a stdlib, huh?
 
 func empty println(int n):
     # Temp holder for the number.
     int nn = 0
+    int i = 0
+
+    # NOTE: do statement should be used when implemented.
 
     # Reverse the number.
     while n != 0:
         nn *= 10
         nn += n % 10
         n //= 10
+        i += 1
 
     # Special case if the number is zero.
     if nn == 0:
         putchar('0')
 
     # Print the number.
-    while nn != 0:
+    while i != 0:
         putchar(nn % 10 + 48)
         nn //= 10
+        i -= 1
 
     # Added that linefeed!
     putchar('\n')
@@ -42,7 +47,6 @@ func empty println(bool b):
 
 func empty println(string s):
     puts(s)
-
 
 func empty println(ptr8 s):
     puts(s)
