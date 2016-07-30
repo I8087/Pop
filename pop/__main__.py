@@ -11,6 +11,10 @@ from pop.pop_rpn import *
 from pop.pop_config import *
 from pop.pop_math import *
 
+abi = ("win",
+       "win32"
+       )
+
 print("Pop Compiler Version {0} | {1}".format(pop.__version__,
                                               pop.__copyright__)
       )
@@ -25,6 +29,10 @@ aparser.add_argument("-d", help="the build directory")
 aparser.add_argument("-o", help="the output file")
 aparser.add_argument("-v", help="increase output verbosity",
                      action="store_true")
+aparser.add_argument("-f", dest="abi", default="native",
+                     choices=abi,
+                     help="Builds the program to a certain platform abi.")
+
 args = aparser.parse_args()
 
 # Don't compile if nothing's there!
