@@ -64,7 +64,7 @@ class Math():
         # Let's do something with mlist.
         while mlist:
             # For debug purposes.
-            #print("{} <-> {}".format(mlist, stack))
+            print("{} <-> {}".format(mlist, stack))
 
             if mlist[0] in self.ops:
                 self.ops[mlist[0]](mlist, stack)
@@ -72,88 +72,11 @@ class Math():
 
             # Create a function to handle... functions.
             elif mlist[0].startswith("func "):
-                func = mlist[0][5:]
-                del mlist[0]
-
-                temp = []
-                count = 1
-                size = 0
-                tempd = []
-
-                if mlist[0] == "(":
-                    del mlist[0]
-                    if mlist[0] != ")":
-                        tempd.append(pparser.dtype(mlist[0]))
-
-                while count:
-                    if mlist[0] == "(":
-                        count += 1
-                    elif mlist[0] == ")":
-                        count -= 1
-
-                    if mlist[0] == "," or (mlist[0] == ")" and not count):
-                        self.out.extend(Math().math(pparser, temp, True))
-                        self.out.append("push {}".format(self.reg["a"]))
-                        size += 4
-                        temp = []
-                        if len(mlist) != 1 and mlist[1] != ")":
-                            tempd.append(pparser.dtype(mlist[1]))
-                    else:
-                        temp.append(mlist[0])
-
-                    del mlist[0]
-
-                self.out.append("call {}".format(
-                    pparser.get_function_name(func, tempd)))
-
-                if size:
-                    self.out.append("add esp, {!s}".format(size))
-
-                self.out.append("")
+                self.func(pparser, mlist, stack)
 
             # Handle indexing.
-            elif mlist[0] == "[":
-                del mlist[0]
-                count = 1
-                temp = []
-
-                while count:
-                    if mlist[0] == "[":
-                        count += 1
-                    elif mlist[0] == "]":
-                        count -= 1
-                    temp.append(mlist[0])
-                    del mlist[0]
-
-                del temp[-1]
-
-                self.out.append("push ebx")
-                self.out.append("mov {}, {}".format(self.reg["b"], self.reg["a"]))
-
-                self.out.extend(Math().math(pparser, temp, True))
-
-                self.out.append("add {}, {}".format(self.reg["a"], self.reg["b"]))
-
-                if self.type["a"].startswith("PTR"):
-
-                    # Factor in pointer offsets.
-                    if self.type["a"].endswith("16"):
-                        pparser.out.append("mov {}, 2".format(self.reg["d"]))
-                    if self.type["a"].endswith("32"):
-                        pparser.out.append("mov {}, 4".format(self.reg["d"]))
-                    if self.type["a"].endswith("64"):
-                        pparser.out.append("mov {}, 8".format(self.reg["d"]))
-                    if not self.type["a"].endswith("8"):
-                        pparser.out.append("mul {}".format(self.reg["d"]))
-
-                    # movsx!!!
-                    self.out.append("mov {}, {}".format(self.reg["b"], self.reg["a"]))
-                    self.out.append("mov al, [{}]".format(self.reg["b"]))
-                    self.out.append("movsx {}, al".format(self.reg["a"]))
-                    self.out.append("pop {}".format(self.reg["b"]))
-                else:
-                    self.parser_error("Indexing error!", self.line)
-                    exit(-1)
+            elif mlist[0].startswith("index "):
+                self.index(pparser, mlist, stack)
 
             else:
                 if not self.type["a"]:
@@ -162,9 +85,15 @@ class Math():
                         self.out.append("mov {}, {}".format(self.reg["a"],
                                                             mlist[0]))
                     else:
-                        self.out.append("mov {}, {}".format(self.reg["a"],
+                        if mlist[1].startswith("func "):
+                            temp = mlist[0]
+                            del mlist[0]
+                            self.func(pparser, mlist, stack)
+                            mlist.insert(0, temp)
+                        else:
+                            self.out.append("mov {}, {}".format(self.reg["a"],
                                                             mlist[1]))
-                        del mlist[1]
+                            del mlist[1]
 
                 # Add to the stack!
                 stack.append(mlist[0])
@@ -224,7 +153,7 @@ class Math():
                 if [x for x in pparser.classes[
                     pparser.dtype(pparser.vlocate(mlist[i-1][4:-1]))] if
                     x.startswith(mlist[i+1])]:
-                    temp_mlist.append("func [ebx+{}.{}]".format(
+                    temp_mlist.append("func {}.{}".format(
                         pparser.dtype(mlist[i-1]),
                         mlist[i+1]))
                 elif mlist[i+1] in pparser.classes[pparser.dtype(pparser.vlocate(
@@ -240,7 +169,6 @@ class Math():
 
                 del temp_mlist[-2]
                 mlist[i+1] = None
-
 
             # FIX
             elif mlist[i] == "@":
@@ -278,6 +206,9 @@ class Math():
             else:
                 temp_mlist.append(mlist[i])
 
+            if len(mlist) > i+1 and mlist[i+1] == "[":
+                temp_mlist[-1] = "index {}".format(temp_mlist[-1])
+
         mlist = temp_mlist
 
         # Remove all None types now that we're out of a loop.
@@ -298,6 +229,118 @@ class Math():
             del mlist[0]
 
         return mstr.strip()
+
+    def func(self, pparser, mlist, stack):
+        func = mlist[0][5:]
+        del mlist[0]
+
+        temp = []
+        count = 1
+        size = 0
+        tempd = []
+
+        if mlist[0] == "(":
+            del mlist[0]
+            if mlist[0] != ")":
+                if mlist[0].startswith("index "):
+                    tempd.append("INT") # WRONG
+                else:
+                    tempd.append(pparser.dtype(mlist[0]))
+
+        while count:
+            if mlist[0] == "(":
+                count += 1
+            elif mlist[0] == ")":
+                count -= 1
+
+            if mlist[0] == "," or (mlist[0] == ")" and not count):
+                self.out.extend(Math().math(pparser, temp, True))
+                self.out.append("push {}".format(self.reg["a"]))
+                size += 4
+                temp = []
+                if len(mlist) != 1 and mlist[1] not in self.ops:
+                    if mlist[0].startswith("index "):
+                        tempd.append("INT") # WRONG
+                    else:
+                        tempd.append(pparser.dtype(mlist[1]))
+            else:
+                temp.append(mlist[0])
+
+            del mlist[0]
+
+        if "." in func:
+            cls, func = func.split(".")
+            self.out.append("call [ebx+{}.{}]".format(cls,
+                pparser.get_function_name(func, tempd, cls=cls)))
+        elif func in pparser.classes:
+            self.out.append("call {}.___new___E@0".format(func))
+        else:
+            self.out.append("call {}".format(
+                pparser.get_function_name(func, tempd)))
+
+        if size:
+            self.out.append("add esp, {!s}".format(size))
+
+        self.out.append("")
+
+    def index(self, pparser, mlist, stack):
+        set_type = False
+        ind = mlist[0][6:]
+
+        if not self.type["a"]:
+            self.type["a"] = pparser.dtype(ind)
+            set_type = True
+
+        self.out.append("mov {}, {}".format(self.reg["a"],
+                        ind))
+
+        del mlist[0]
+        del mlist[0]
+        count = 1
+        temp = []
+
+        while count:
+            if mlist[0] == "[":
+                count += 1
+            elif mlist[0] == "]":
+                count -= 1
+            temp.append(mlist[0])
+            del mlist[0]
+
+        del temp[-1]
+
+        self.out.append("push ebx")
+        self.out.append("mov {}, {}".format(self.reg["b"], self.reg["a"]))
+
+        self.out.extend(Math().math(pparser, temp, True))
+
+        self.out.append("add {}, {}".format(self.reg["a"], self.reg["b"]))
+
+        if self.type["a"].startswith("PTR"):
+
+            # Factor in pointer offsets.
+            if self.type["a"].endswith("16"):
+                pparser.out.append("mov {}, 2".format(self.reg["d"]))
+            if self.type["a"].endswith("32"):
+                pparser.out.append("mov {}, 4".format(self.reg["d"]))
+            if self.type["a"].endswith("64"):
+                pparser.out.append("mov {}, 8".format(self.reg["d"]))
+            if not self.type["a"].endswith("8"):
+                pparser.out.append("mul {}".format(self.reg["d"]))
+
+            # movsx!!!
+            self.out.append("mov {}, {}".format(self.reg["b"], self.reg["a"]))
+            self.out.append("mov al, [{}]".format(self.reg["b"]))
+            self.out.append("movsx {}, al".format(self.reg["a"]))
+            self.out.append("pop {}".format(self.reg["b"]))
+        else:
+            print("INDEXING ERROR!")
+            #self.parser_error("Indexing error!", self.line)
+            exit(-1)
+
+        if set_type:
+            stack.append("[eax]")
+
 
     def mul(self, mlist, stack):
         if self.type["a"] == "INT":
@@ -344,7 +387,7 @@ class Math():
         self.out.append("or {}, {}".format(self.reg["a"], stack.pop()))
 
     def equal(self, mlist, stack):
-        self.out.append("mov {}, {}".format(stack.pop(), self.reg["a"]))
+        self.out.append("mov {}, {}".format(stack[0], self.reg["a"]))
 
     def equal_add(self, mlist, stack):
         if self.type["a"] == "INT":
