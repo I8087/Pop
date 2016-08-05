@@ -64,7 +64,7 @@ class Math():
         # Let's do something with mlist.
         while mlist:
             # For debug purposes.
-            print("{} <-> {}".format(mlist, stack))
+            #print("{} <-> {}".format(mlist, stack))
 
             if mlist[0] in self.ops:
                 self.ops[mlist[0]](mlist, stack)
@@ -146,15 +146,12 @@ class Math():
                   pparser.vtype(
                       pparser.vlocate(mlist[i-1][4:-1])) in pparser.classes):
 
-                self.out.append("mov ebx, {}".format(mlist[i-1]))
-                self.type["b"] = mlist[i-1]
-
                 # Sloppy, but usable method support.
                 if [x for x in pparser.classes[
                     pparser.dtype(pparser.vlocate(mlist[i-1][4:-1]))] if
                     x.startswith(mlist[i+1])]:
                     temp_mlist.append("func {}.{}".format(
-                        pparser.dtype(mlist[i-1]),
+                        pparser.vlocate(mlist[i-1][4:-1]),
                         mlist[i+1]))
                 elif mlist[i+1] in pparser.classes[pparser.dtype(pparser.vlocate(
                     mlist[i-1][4:-1]))]["__global__"]:
@@ -270,8 +267,13 @@ class Math():
 
         if "." in func:
             cls, func = func.split(".")
-            self.out.append("call [ebx+{}.{}]".format(cls,
-                pparser.get_function_name(func, tempd, cls=cls)))
+            if self.type["b"] != cls:
+                self.type["b"] = cls
+                self.out.append("mov ebx, {}".format(pparser.locate(cls)))
+
+            self.out.append("call [ebx+{}.{}]".format(pparser.dtype(cls),
+                pparser.get_function_name(func, tempd, cls=pparser.dtype(cls))))
+
         elif func in pparser.classes:
             self.out.append("call {}.___new___E@0".format(func))
         else:
